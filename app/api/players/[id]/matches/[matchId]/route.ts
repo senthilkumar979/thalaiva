@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { getPlayerMatchFantasyPointsBreakdown } from "@/lib/scoring";
-import { PlayerMatchScore } from "@/models/PlayerMatchScore";
+import { PlayerMatchScore, type IPlayerMatchScore } from "@/models/PlayerMatchScore";
 
 interface RouteParams {
   params: Promise<{ id: string; matchId: string }>;
@@ -16,11 +16,15 @@ export async function GET(_req: Request, { params }: RouteParams) {
       .populate("match", "matchNumber date venue franchiseA franchiseB")
       .lean();
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const { total, breakdown } = getPlayerMatchFantasyPointsBreakdown({
-      Batting: doc.Batting,
-      Bowling: doc.Bowling,
-      Fielding: doc.Fielding,
-    });
+    const participated = Boolean((doc as IPlayerMatchScore).participated);
+    const { total, breakdown } = getPlayerMatchFantasyPointsBreakdown(
+      {
+        Batting: doc.Batting,
+        Bowling: doc.Bowling,
+        Fielding: doc.Fielding,
+      },
+      participated
+    );
     const player = doc.player as unknown as {
       name: string;
       franchise?: { shortCode?: string };

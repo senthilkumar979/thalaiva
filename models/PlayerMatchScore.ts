@@ -28,6 +28,8 @@ export interface IPlayerMatchScore {
   Batting: IBattingStats;
   Bowling: IBowlingStats;
   Fielding: IFieldingStats;
+  /** Selected as part of the playing XI for this match (+2 when true). */
+  participated?: boolean;
   fantasyPoints: number;
 }
 
@@ -73,6 +75,7 @@ const PlayerMatchScoreSchema = new Schema<IPlayerMatchScore>(
     Batting: { type: BattingSchema, required: true },
     Bowling: { type: BowlingSchema, required: true },
     Fielding: { type: FieldingSchema, required: true },
+    participated: { type: Boolean, default: false },
     fantasyPoints: { type: Number, required: true },
   },
   { timestamps: false }

@@ -8,6 +8,7 @@ import { Player } from "@/models/Player";
 
 const statSchema = z.object({
   playerId: z.string().min(1),
+  participated: z.boolean(),
   Batting: z.object({
     runs: z.number().min(0),
     ballsFaced: z.number().min(0),

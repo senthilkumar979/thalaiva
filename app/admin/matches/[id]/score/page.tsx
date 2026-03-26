@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { AdminScoreForm } from "@/components/AdminScoreForm";
+import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
+import type { ScorePlayerLite } from "@/components/admin/AdminScoreRosterTab";
 
 interface MatchTeam {
   _id: string;
   name: string;
   shortCode: string;
+  logoUrl?: string;
 }
 
 interface MatchDetail {
@@ -18,16 +21,10 @@ interface MatchDetail {
   franchiseB: MatchTeam;
 }
 
-interface PlayerLite {
-  _id: string;
-  name: string;
-  franchise: { _id: string; shortCode?: string; name?: string };
-}
-
 export default function AdminScorePage() {
   const params = useParams();
   const id = String(params.id);
-  const [players, setPlayers] = useState<PlayerLite[]>([]);
+  const [players, setPlayers] = useState<ScorePlayerLite[]>([]);
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [scored, setScored] = useState(false);
 
@@ -53,21 +50,27 @@ export default function AdminScorePage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             <ClipboardList className="size-3.5" aria-hidden />
             Scoring
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Score match</h1>
           <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-            Each player earns +2 participation points on top of batting, bowling, and fielding fantasy points. Use the
-            team filter to focus on one side. Totals update as you edit stats.
+            Mark who played to award +2 participation. Enter stats per player; totals update live. Use Home / Away
+            tabs — Home opens by default.
           </p>
           {match ? (
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{match.franchiseA.shortCode}</span>
-              {" vs "}
-              <span className="font-medium text-foreground">{match.franchiseB.shortCode}</span>
-            </p>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                <AdminScoreTeamLogo logoUrl={match.franchiseA.logoUrl} shortCode={match.franchiseA.shortCode} />
+                {match.franchiseA.shortCode}
+              </span>
+              <span className="text-muted-foreground">vs</span>
+              <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                <AdminScoreTeamLogo logoUrl={match.franchiseB.logoUrl} shortCode={match.franchiseB.shortCode} />
+                {match.franchiseB.shortCode}
+              </span>
+            </div>
           ) : null}
         </div>
       </div>

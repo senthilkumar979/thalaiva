@@ -14,15 +14,15 @@ export async function GET(_req: Request, { params }: RouteParams) {
     const { id } = await params;
     await connectDb();
     const m = await Match.findById(id)
-      .populate("franchiseA", "name shortCode")
-      .populate("franchiseB", "name shortCode")
+      .populate("franchiseA", "name shortCode logoUrl")
+      .populate("franchiseB", "name shortCode logoUrl")
       .lean();
     if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const players = await Player.find({
       franchise: { $in: [m.franchiseA, m.franchiseB] },
       isActive: true,
     })
-      .populate("franchise", "name shortCode")
+      .populate("franchise", "name shortCode logoUrl")
       .sort({ name: 1 })
       .lean();
     return NextResponse.json({ match: m, players });

@@ -1,6 +1,6 @@
 import mongoose, { type ClientSession, type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { totalPlayerMatchFantasyPoints } from "@/lib/scoring";
+import { playerMatchFantasyPoints } from "@/lib/scoring";
 import { Competition } from "@/models/Competition";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
 import { Entry, type IEntry } from "@/models/Entry";
@@ -15,6 +15,8 @@ import {
 
 export interface PlayerStatInput {
   playerId: string;
+  /** Playing XI — +2 participation only when true. */
+  participated: boolean;
   Batting: IBattingStats;
   Bowling: IBowlingStats;
   Fielding: IFieldingStats;
@@ -118,11 +120,14 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
     if (match.isScored) throw new Error("Match already scored");
 
     for (const s of stats) {
-      const pts = totalPlayerMatchFantasyPoints({
-        Batting: s.Batting,
-        Bowling: s.Bowling,
-        Fielding: s.Fielding,
-      });
+      const pts = playerMatchFantasyPoints(
+        {
+          Batting: s.Batting,
+          Bowling: s.Bowling,
+          Fielding: s.Fielding,
+        },
+        s.participated
+      );
       await PlayerMatchScore.findOneAndUpdate(
         { player: s.playerId, match: matchId },
         {
@@ -130,6 +135,7 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
             Batting: s.Batting,
             Bowling: s.Bowling,
             Fielding: s.Fielding,
+            participated: s.participated,
             fantasyPoints: pts,
           },
         },
