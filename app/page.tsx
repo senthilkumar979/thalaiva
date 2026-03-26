@@ -7,7 +7,11 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { HomeHeroPrimaryActions } from "@/components/HomeHeroPrimaryActions";
+import { HomePlayersExplorer } from "@/components/home/HomePlayersExplorer";
+import { getPlayersGroupedByFranchise } from "@/lib/queries/homePlayers";
+
+export const dynamic = "force-dynamic";
 
 const features = [
   {
@@ -30,7 +34,9 @@ const features = [
   },
 ] as const;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const teams = await getPlayersGroupedByFranchise();
+
   return (
     <div className="space-y-12 pb-4">
       <section
@@ -61,38 +67,28 @@ export default function HomePage() {
               Build fifteen-player squads across cost tiers, run or join leagues with friends, and chase
               the leaderboard as live scores land after every ball.
             </p>
-            <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start">
-              <Link href="/competitions" className="inline-flex sm:shrink-0">
-                <Button
-                  size="lg"
-                  className="h-12 w-full rounded-xl bg-white px-8 font-semibold text-[#19398a] shadow-lg hover:bg-white/90 sm:w-auto"
-                >
-                  Browse competitions
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
-              </Link>
-              <Link href="/register" className="inline-flex sm:shrink-0">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 w-full rounded-xl border-white/30 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
-                >
-                  Create account
-                </Button>
-              </Link>
-            </div>
-            <p className="mt-6 text-sm text-white/45">
-              Already playing?{" "}
-              <Link href="/login" className="font-medium text-white/80 underline-offset-4 hover:text-white hover:underline">
-                Log in
-              </Link>
-            </p>
+            <HomeHeroPrimaryActions />
           </div>
 
           <div className="pointer-events-none absolute bottom-8 right-8 hidden opacity-[0.12] lg:block" aria-hidden>
             <Trophy className="size-40 text-white" strokeWidth={1} />
           </div>
         </div>
+      </section>
+
+      <section aria-labelledby="rosters-heading" className="space-y-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="rosters-heading" className="text-2xl font-semibold tracking-tight">
+              Franchise rosters
+            </h2>
+            <p className="mt-1 max-w-2xl text-muted-foreground">
+              Every active player in the pool, grouped by IPL side — filter by tier, search by name, and
+              scan roles before you draft.
+            </p>
+          </div>
+        </div>
+        <HomePlayersExplorer teams={teams} />
       </section>
 
       <section aria-labelledby="features-heading" className="space-y-6">
