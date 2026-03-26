@@ -1,27 +1,30 @@
-"use client";
+'use client'
 
-import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
-import { cn } from "@/lib/utils";
+import { AdminScoreTeamLogo } from '@/components/admin/AdminScoreTeamLogo'
+import { cn } from '@/lib/utils'
 
 interface TeamTotal {
-  id: string;
-  shortCode: string;
-  name: string;
-  logoUrl?: string;
-  total: number;
+  id: string
+  shortCode: string
+  name: string
+  logoUrl?: string
+  total: number
 }
 
 interface AdminScoreTotalsBarProps {
-  grandTotal: number;
-  teams: [TeamTotal, TeamTotal];
+  grandTotal: number
+  teams: [TeamTotal, TeamTotal]
 }
 
-export const AdminScoreTotalsBar = ({ grandTotal, teams }: AdminScoreTotalsBarProps) => (
+export const AdminScoreTotalsBar = ({
+  grandTotal,
+  teams,
+}: AdminScoreTotalsBarProps) => (
   <div className="grid gap-4 sm:grid-cols-3">
     <div
       className={cn(
-        "rounded-xl border border-primary/25 bg-primary/10 px-4 py-4",
-        "ring-1 ring-primary/20 shadow-sm"
+        'rounded-xl border border-primary/25 bg-primary/10 px-4 py-4',
+        'ring-1 ring-primary/20 shadow-sm',
       )}
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/90">
@@ -29,18 +32,17 @@ export const AdminScoreTotalsBar = ({ grandTotal, teams }: AdminScoreTotalsBarPr
       </p>
       <p className="mt-1 tabular-nums text-3xl font-bold tracking-tight text-primary">
         {grandTotal}
-        <span className="ml-1 text-base font-semibold text-muted-foreground">pts</span>
-      </p>
-      <p className="mt-2 text-xs text-muted-foreground">
-        +2 participation only for players marked as playing.
+        <span className="ml-1 text-base font-semibold text-muted-foreground">
+          pts
+        </span>
       </p>
     </div>
     {teams.map((t) => (
       <div
         key={t.id}
         className={cn(
-          "flex gap-3 rounded-xl border border-border/80 bg-card px-4 py-4",
-          "ring-1 ring-border/50"
+          'flex gap-3 rounded-xl border border-border/80 bg-card px-4 py-4',
+          'ring-1 ring-border/50',
         )}
       >
         <AdminScoreTeamLogo logoUrl={t.logoUrl} shortCode={t.shortCode} />
@@ -51,10 +53,12 @@ export const AdminScoreTotalsBar = ({ grandTotal, teams }: AdminScoreTotalsBarPr
           <p className="truncate text-xs text-muted-foreground">{t.name}</p>
           <p className="mt-1 tabular-nums text-2xl font-semibold tracking-tight text-primary">
             {t.total}
-            <span className="ml-1 text-sm font-medium text-muted-foreground">pts</span>
+            <span className="ml-1 text-sm font-medium text-muted-foreground">
+              pts
+            </span>
           </p>
         </div>
       </div>
     ))}
   </div>
-);
+)

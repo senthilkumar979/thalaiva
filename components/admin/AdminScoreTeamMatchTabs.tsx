@@ -36,7 +36,7 @@ export const AdminScoreTeamMatchTabs = ({
             shortCode={matchTeams.franchiseA.shortCode}
             size="sm"
           />
-          <span className="font-medium">Home</span>
+          <span className="font-medium hidden md:block">Home</span>
           <span className="text-muted-foreground">·</span>
           <span>{matchTeams.franchiseA.shortCode}</span>
         </TabsTrigger>
@@ -46,7 +46,7 @@ export const AdminScoreTeamMatchTabs = ({
             shortCode={matchTeams.franchiseB.shortCode}
             size="sm"
           />
-          <span className="font-medium">Away</span>
+          <span className="font-medium hidden md:block">Away</span>
           <span className="text-muted-foreground">·</span>
           <span>{matchTeams.franchiseB.shortCode}</span>
         </TabsTrigger>
