@@ -8,6 +8,13 @@ export const IPL_ROLE_ICON_SVG = {
 
 export type KnownPlayerRole = keyof typeof IPL_ROLE_ICON_SVG;
 
+export const IPL_ROLE_LABELS: Record<KnownPlayerRole, string> = {
+  bat: "Batter",
+  bowl: "Bowler",
+  allrounder: "All-rounder",
+  wk: "Wicket-keeper",
+};
+
 export function getIplRoleIconUrl(role: string): string | null {
   const r = role.toLowerCase().trim();
   if (r in IPL_ROLE_ICON_SVG) return IPL_ROLE_ICON_SVG[r as KnownPlayerRole];

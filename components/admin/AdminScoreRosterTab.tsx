@@ -42,11 +42,14 @@ export const AdminScoreRosterTab = ({
       {list.map((p) => {
         const row = rows[p._id] ?? emptyPlayerScoreStats(p._id);
         const franchiseLabel = p.franchise?.shortCode ?? p.franchise?.name ?? "—";
+        const franchiseShortCode = p.franchise?.shortCode ?? "—";
         return (
           <AdminScorePlayerAccordion
             key={p._id}
             name={p.name}
             franchiseLabel={franchiseLabel}
+            franchiseLogoUrl={p.franchise.logoUrl}
+            franchiseShortCode={franchiseShortCode}
             role={p.role}
             points={pointsByPlayer[p._id] ?? 0}
             participated={participation[p._id] ?? false}

@@ -2,15 +2,23 @@
 
 import { ChevronDown } from "lucide-react";
 import { AdminScorePlayerRow, type StatFormValues } from "@/components/AdminScorePlayerRow";
+import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
 import { Label } from "@/components/ui/label";
+import {
+  getIplRoleIconUrl,
+  IPL_ROLE_ICON_SVG,
+  IPL_ROLE_LABELS,
+  type KnownPlayerRole,
+} from "@/lib/iplRoleIcons";
 import { MATCH_PARTICIPATION_POINTS } from "@/lib/scoring";
-import { PLAYER_ROLE_UI } from "@/lib/playerRoleUi";
 import { cn } from "@/lib/utils";
 import type { PlayerRole } from "@/models/Player";
 
 interface AdminScorePlayerAccordionProps {
   name: string;
   franchiseLabel: string;
+  franchiseLogoUrl?: string;
+  franchiseShortCode: string;
   role: PlayerRole;
   points: number;
   participated: boolean;
@@ -19,9 +27,16 @@ interface AdminScorePlayerAccordionProps {
   onChange: (next: StatFormValues) => void;
 }
 
+function iplRoleLabel(role: PlayerRole): string {
+  const k = role as KnownPlayerRole;
+  return k in IPL_ROLE_LABELS ? IPL_ROLE_LABELS[k] : IPL_ROLE_LABELS.bat;
+}
+
 export const AdminScorePlayerAccordion = ({
   name,
   franchiseLabel,
+  franchiseLogoUrl,
+  franchiseShortCode,
   role,
   points,
   participated,
@@ -29,7 +44,7 @@ export const AdminScorePlayerAccordion = ({
   value,
   onChange,
 }: AdminScorePlayerAccordionProps) => {
-  const { Icon, label: roleLabel } = PLAYER_ROLE_UI[role] ?? PLAYER_ROLE_UI.bat;
+  const roleIconSrc = getIplRoleIconUrl(role) ?? IPL_ROLE_ICON_SVG.bat;
   return (
     <details className="group rounded-xl border border-border/80 bg-card shadow-sm">
       <summary
@@ -38,16 +53,18 @@ export const AdminScorePlayerAccordion = ({
           "[&::-webkit-details-marker]:hidden"
         )}
       >
+        <AdminScoreTeamLogo logoUrl={franchiseLogoUrl} shortCode={franchiseShortCode} size="sm" />
         <div className="min-w-0 flex-1 text-left">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{name}</span>
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                "inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
               )}
             >
-              <Icon className="size-3.5 shrink-0" aria-hidden />
-              {roleLabel}
+              {/* eslint-disable-next-line @next/next/no-img-element -- IPL SVG from iplt20.com */}
+              <img src={roleIconSrc} alt="" className="size-4 shrink-0 object-contain" />
+              {iplRoleLabel(role)}
             </span>
           </div>
           <div className="text-xs text-muted-foreground">{franchiseLabel}</div>
