@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { Badge } from "@/components/ui/badge";
+import { useCompetitionName } from "@/hooks/useCompetitionName";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Row {
@@ -15,6 +17,7 @@ interface Row {
 }
 
 interface Cms {
+  match?: { matchNumber?: number };
   playersWithPoints: Row[];
   totalPointsThisMatch: number;
   rankThisMatch: number;
@@ -25,6 +28,7 @@ export default function MyMatchDetailPage() {
   const competitionId = String(params.id);
   const matchId = String(params.matchId);
   const { status } = useSession();
+  const compName = useCompetitionName(competitionId);
   const [data, setData] = useState<Cms | null>(null);
 
   useEffect(() => {
@@ -41,11 +45,21 @@ export default function MyMatchDetailPage() {
 
   if (!data?.playersWithPoints) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
+  const matchLabel =
+    typeof data.match?.matchNumber === "number" ? `Match #${data.match.matchNumber}` : "Match";
+
   return (
     <div className="space-y-4">
-      <Link href={`/competitions/${competitionId}/my-team`} className="text-sm text-primary underline">
-        Back to matches
-      </Link>
+      <CompetitionBreadcrumb
+        variant="light"
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Competitions", href: "/competitions" },
+          { label: compName ?? "League", href: `/competitions/${competitionId}` },
+          { label: "My team", href: `/competitions/${competitionId}/my-team` },
+          { label: matchLabel },
+        ]}
+      />
       <div className="flex flex-wrap gap-4 text-sm">
         <div>
           <div className="text-muted-foreground">Points this match</div>

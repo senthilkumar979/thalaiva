@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { CompetitionLobbyCard, type LobbyCompetition } from "@/components/competitions/CompetitionLobbyCard";
 import { CompetitionsEmptyState } from "@/components/competitions/CompetitionsEmptyState";
 import { CreateCompetitionPanel } from "@/components/competitions/CreateCompetitionPanel";
 
 export default function CompetitionsPage() {
+  const router = useRouter();
   const { status } = useSession();
   const [list, setList] = useState<LobbyCompetition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +67,7 @@ export default function CompetitionsPage() {
 
   const join = async (id: string) => {
     await fetch(`/api/competitions/${id}/join`, { method: "POST" });
-    window.location.href = `/competitions/${id}`;
+    router.push(`/competitions/${id}`);
   };
 
   const isAuth = status === "authenticated";
@@ -80,6 +83,11 @@ export default function CompetitionsPage() {
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-[min(100%,32rem)] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
       <div className="relative space-y-12 px-4 py-12 sm:px-8 sm:py-14">
+        <CompetitionBreadcrumb
+          className="mx-auto max-w-3xl"
+          variant="dark"
+          items={[{ label: "Home", href: "/" }, { label: "Competitions" }]}
+        />
         <header className="mx-auto max-w-3xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
             <Trophy className="size-3.5 text-amber-300/90" />

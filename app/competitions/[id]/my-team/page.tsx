@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { MatchRow } from "@/components/MatchRow";
+import { useCompetitionName } from "@/hooks/useCompetitionName";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ export default function MyTeamMatchesPage() {
   const params = useParams();
   const id = String(params.id);
   const { status } = useSession();
+  const compName = useCompetitionName(id);
   const [rows, setRows] = useState<MatchRowData[]>([]);
 
   useEffect(() => {
@@ -47,13 +49,19 @@ export default function MyTeamMatchesPage() {
 
   return (
     <div className="space-y-4">
+      <CompetitionBreadcrumb
+        variant="light"
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Competitions", href: "/competitions" },
+          { label: compName ?? "League", href: `/competitions/${id}` },
+          { label: "My team" },
+        ]}
+      />
       <div>
         <h1 className="text-2xl font-semibold">My team — matches</h1>
         <p className="text-muted-foreground">Points and ranks update after each scored match.</p>
       </div>
-      <Link href={`/competitions/${id}`} className="text-sm text-primary underline">
-        Back to competition
-      </Link>
       <Table>
         <TableHeader>
           <TableRow>

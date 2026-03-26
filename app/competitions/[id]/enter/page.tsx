@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
+import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { TeamBuilder } from "@/components/TeamBuilder";
 
 interface Competition {
+  name: string;
   entryDeadline: string;
 }
 
@@ -65,6 +67,15 @@ export default function EnterCompetitionPage() {
 
   return shell(
     <div className="space-y-10">
+      <CompetitionBreadcrumb
+        variant="dark"
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Competitions", href: "/competitions" },
+          { label: comp.name, href: `/competitions/${id}` },
+          { label: "Enter team" },
+        ]}
+      />
       <header className="space-y-4">
         <div className="flex items-center gap-3">
           <span className="h-1 w-12 rounded-full bg-gradient-to-r from-amber-300 to-amber-500/40" />
