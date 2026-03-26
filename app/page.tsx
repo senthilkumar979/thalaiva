@@ -8,8 +8,6 @@ import {
   Users,
 } from 'lucide-react'
 import { HomeHeroPrimaryActions } from '@/components/HomeHeroPrimaryActions'
-import { HomePlayersExplorer } from '@/components/home/HomePlayersExplorer'
-import { getPlayersGroupedByFranchise } from '@/lib/queries/homePlayers'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,9 +35,7 @@ const features = [
   },
 ] as const
 
-export default async function HomePage() {
-  const teams = await getPlayersGroupedByFranchise()
-
+export default function HomePage() {
   return (
     <div className="space-y-12 pb-4">
       <section

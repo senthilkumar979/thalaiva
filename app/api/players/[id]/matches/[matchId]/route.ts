@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
-import { calculateFantasyPointsWithBreakdown } from "@/lib/scoring";
+import { getPlayerMatchFantasyPointsBreakdown } from "@/lib/scoring";
 import { PlayerMatchScore } from "@/models/PlayerMatchScore";
 
 interface RouteParams {
@@ -16,7 +16,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
       .populate("match", "matchNumber date venue franchiseA franchiseB")
       .lean();
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const { total, breakdown } = calculateFantasyPointsWithBreakdown({
+    const { total, breakdown } = getPlayerMatchFantasyPointsBreakdown({
       Batting: doc.Batting,
       Bowling: doc.Bowling,
       Fielding: doc.Fielding,

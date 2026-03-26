@@ -1,6 +1,6 @@
 import mongoose, { type ClientSession, type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { calculateFantasyPoints } from "@/lib/scoring";
+import { totalPlayerMatchFantasyPoints } from "@/lib/scoring";
 import { Competition } from "@/models/Competition";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
 import { Entry, type IEntry } from "@/models/Entry";
@@ -118,7 +118,7 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
     if (match.isScored) throw new Error("Match already scored");
 
     for (const s of stats) {
-      const pts = calculateFantasyPoints({
+      const pts = totalPlayerMatchFantasyPoints({
         Batting: s.Batting,
         Bowling: s.Bowling,
         Fielding: s.Fielding,

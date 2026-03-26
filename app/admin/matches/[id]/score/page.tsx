@@ -5,16 +5,30 @@ import { useParams } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { AdminScoreForm } from "@/components/AdminScoreForm";
 
+interface MatchTeam {
+  _id: string;
+  name: string;
+  shortCode: string;
+}
+
+interface MatchDetail {
+  _id: string;
+  isScored?: boolean;
+  franchiseA: MatchTeam;
+  franchiseB: MatchTeam;
+}
+
 interface PlayerLite {
   _id: string;
   name: string;
-  franchise: { shortCode?: string; name?: string };
+  franchise: { _id: string; shortCode?: string; name?: string };
 }
 
 export default function AdminScorePage() {
   const params = useParams();
   const id = String(params.id);
   const [players, setPlayers] = useState<PlayerLite[]>([]);
+  const [match, setMatch] = useState<MatchDetail | null>(null);
   const [scored, setScored] = useState(false);
 
   useEffect(() => {
@@ -22,10 +36,18 @@ export default function AdminScorePage() {
       .then((r) => r.json())
       .then((data) => {
         setPlayers(data.players ?? []);
+        setMatch(data.match ?? null);
         setScored(!!data.match?.isScored);
       })
       .catch(() => undefined);
   }, [id]);
+
+  const canScore =
+    !scored &&
+    match &&
+    players.length > 0 &&
+    match.franchiseA?._id &&
+    match.franchiseB?._id;
 
   return (
     <div className="space-y-8">
@@ -37,8 +59,16 @@ export default function AdminScorePage() {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Score match</h1>
           <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-            Enter fantasy points per player. Use breadcrumbs to return to the match list.
+            Each player earns +2 participation points on top of batting, bowling, and fielding fantasy points. Use the
+            team filter to focus on one side. Totals update as you edit stats.
           </p>
+          {match ? (
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{match.franchiseA.shortCode}</span>
+              {" vs "}
+              <span className="font-medium text-foreground">{match.franchiseB.shortCode}</span>
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -47,8 +77,17 @@ export default function AdminScorePage() {
           This match is already marked as scored. Re-entry is disabled.
         </p>
       )}
-      {!scored && players.length > 0 && <AdminScoreForm matchId={id} players={players} />}
-      {!scored && players.length === 0 && (
+      {canScore ? (
+        <AdminScoreForm
+          matchId={id}
+          players={players}
+          matchTeams={{
+            franchiseA: match.franchiseA,
+            franchiseB: match.franchiseB,
+          }}
+        />
+      ) : null}
+      {!scored && match && players.length === 0 && (
         <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
           No players found for these franchises. Upload the pool first.
         </p>

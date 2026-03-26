@@ -31,20 +31,36 @@ interface AdminScorePlayerRowProps {
   franchise: string;
   value: StatFormValues;
   onChange: (next: StatFormValues) => void;
+  /** When false, only stat columns render (e.g. inside an accordion body). */
+  showHeader?: boolean;
 }
 
 const n = (v: string) => (v === "" ? 0 : Number(v));
 
-export const AdminScorePlayerRow = ({ name, franchise, value, onChange }: AdminScorePlayerRowProps) => {
+export const AdminScorePlayerRow = ({
+  name,
+  franchise,
+  value,
+  onChange,
+  showHeader = true,
+}: AdminScorePlayerRowProps) => {
   const b = value.Batting;
   const bw = value.Bowling;
   const f = value.Fielding;
   return (
-    <div className="grid gap-3 rounded-md border p-3 md:grid-cols-4">
-      <div>
-        <div className="font-medium">{name}</div>
-        <div className="text-xs text-muted-foreground">{franchise}</div>
-      </div>
+    <div
+      className={
+        showHeader
+          ? "grid gap-3 rounded-md border p-3 md:grid-cols-4"
+          : "grid gap-3 md:grid-cols-3"
+      }
+    >
+      {showHeader ? (
+        <div>
+          <div className="font-medium">{name}</div>
+          <div className="text-xs text-muted-foreground">{franchise}</div>
+        </div>
+      ) : null}
       <div className="space-y-2">
         <Label className="text-xs">Batting</Label>
         <div className="grid grid-cols-2 gap-2">

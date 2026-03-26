@@ -13,7 +13,10 @@ export async function GET(_req: Request, { params }: RouteParams) {
     await requireAdmin();
     const { id } = await params;
     await connectDb();
-    const m = await Match.findById(id).lean();
+    const m = await Match.findById(id)
+      .populate("franchiseA", "name shortCode")
+      .populate("franchiseB", "name shortCode")
+      .lean();
     if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const players = await Player.find({
       franchise: { $in: [m.franchiseA, m.franchiseB] },

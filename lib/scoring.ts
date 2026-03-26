@@ -87,3 +87,22 @@ export function calculateFantasyPointsWithBreakdown(
 export function calculateFantasyPoints(stats: IPlayerMatchScoreInput): number {
   return calculateFantasyPointsWithBreakdown(stats).total;
 }
+
+/** Flat bonus for being in the playing squad for this match (applied to stored fantasy total). */
+export const MATCH_PARTICIPATION_POINTS = 2;
+
+export function totalPlayerMatchFantasyPoints(stats: IPlayerMatchScoreInput): number {
+  return calculateFantasyPoints(stats) + MATCH_PARTICIPATION_POINTS;
+}
+
+export function getPlayerMatchFantasyPointsBreakdown(stats: IPlayerMatchScoreInput): {
+  total: number;
+  breakdown: FantasyPointsBreakdown[];
+} {
+  const { total, breakdown } = calculateFantasyPointsWithBreakdown(stats);
+  const participation = MATCH_PARTICIPATION_POINTS;
+  return {
+    total: total + participation,
+    breakdown: [...breakdown, { label: "Match participation", points: participation }],
+  };
+}

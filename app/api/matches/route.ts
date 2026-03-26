@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
+import { parseDateOnlyLocal } from "@/lib/matchDate";
 import { requireAdmin } from "@/lib/session";
 import { Match } from "@/models/Match";
 
@@ -8,8 +9,8 @@ const createSchema = z.object({
   matchNumber: z.number().int().positive(),
   franchiseA: z.string().min(1),
   franchiseB: z.string().min(1),
-  date: z.string().datetime(),
-  venue: z.string().min(1).max(200),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+  venue: z.enum(["home", "away"]),
 });
 
 export async function GET() {
@@ -40,13 +41,20 @@ export async function POST(req: Request) {
       matchNumber: parsed.data.matchNumber,
       franchiseA: parsed.data.franchiseA,
       franchiseB: parsed.data.franchiseB,
-      date: new Date(parsed.data.date),
+      date: parseDateOnlyLocal(parsed.data.date),
       venue: parsed.data.venue,
       isScored: false,
     });
-    return NextResponse.json(m);
+    const fresh = await Match.findById(m._id)
+      .populate("franchiseA", "name shortCode logoUrl")
+      .populate("franchiseB", "name shortCode logoUrl")
+      .lean();
+    return NextResponse.json(fresh);
   } catch (e) {
-    const err = e as Error & { status?: number };
+    const err = e as Error & { code?: number; status?: number };
+    if (err.code === 11000) {
+      return NextResponse.json({ error: "Match number already exists" }, { status: 400 });
+    }
     if (err.status) return NextResponse.json({ error: err.message }, { status: err.status });
     console.error(e);
     return NextResponse.json({ error: "Failed to create match" }, { status: 500 });

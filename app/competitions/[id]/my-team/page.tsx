@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCompetitionName } from "@/hooks/useCompetitionName";
+import { formatVenueLabel } from "@/lib/matchVenue";
 import { cn } from "@/lib/utils";
 
 interface MatchRowData {
@@ -182,7 +183,7 @@ export default function MyTeamMatchesPage() {
               key={String(r.match._id)}
               competitionId={id}
               matchId={String(r.match._id)}
-              label={`#${r.match.matchNumber} — ${new Date(r.match.date).toLocaleDateString()} @ ${r.match.venue}`}
+              label={`#${r.match.matchNumber} — ${new Date(r.match.date).toLocaleDateString()} @ ${formatVenueLabel(r.match.venue)}`}
               points={r.totalPointsThisMatch}
               rank={r.rankThisMatch}
               cumulative={r.cumulative}
