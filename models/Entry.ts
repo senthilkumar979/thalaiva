@@ -1,0 +1,63 @@
+import mongoose, { Schema, type Model, type Types } from "mongoose";
+import { Player } from "./Player";
+
+export interface IEntry {
+  competition: Types.ObjectId;
+  user: Types.ObjectId;
+  customTeamName: string;
+  tier1Players: Types.ObjectId[];
+  tier2Players: Types.ObjectId[];
+  tier3Players: Types.ObjectId[];
+  captain: Types.ObjectId;
+  totalScore: number;
+}
+
+export interface IEntryDocument extends IEntry {
+  _id: Types.ObjectId;
+}
+
+const EntrySchema = new Schema<IEntry>(
+  {
+    competition: { type: Schema.Types.ObjectId, ref: "Competition", required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    customTeamName: { type: String, required: true, trim: true },
+    tier1Players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+    tier2Players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+    tier3Players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
+    captain: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+    totalScore: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+EntrySchema.index({ competition: 1, user: 1 }, { unique: true });
+
+async function assertTierFranchiseUniqueness(
+  tierPlayerIds: Types.ObjectId[]
+): Promise<void> {
+  if (tierPlayerIds.length !== 5) return;
+  const players = await Player.find({ _id: { $in: tierPlayerIds } })
+    .select("franchise")
+    .lean();
+  const franchises = players.map((p) => String(p.franchise));
+  const unique = new Set(franchises);
+  if (unique.size !== franchises.length) {
+    throw new Error("Each tier must have 5 players from different franchises");
+  }
+}
+
+EntrySchema.pre("save", async function () {
+  await assertTierFranchiseUniqueness(this.tier1Players as Types.ObjectId[]);
+  await assertTierFranchiseUniqueness(this.tier2Players as Types.ObjectId[]);
+  await assertTierFranchiseUniqueness(this.tier3Players as Types.ObjectId[]);
+  const all = [
+    ...this.tier1Players.map(String),
+    ...this.tier2Players.map(String),
+    ...this.tier3Players.map(String),
+  ];
+  if (new Set(all).size !== 15) throw new Error("Duplicate player across tiers");
+  if (!all.includes(String(this.captain))) throw new Error("Captain must be one of the 15 players");
+});
+
+export const Entry: Model<IEntry> =
+  mongoose.models.Entry ?? mongoose.model<IEntry>("Entry", EntrySchema);
