@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Pencil } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { CompetitionDetailHero } from "@/components/competitions/CompetitionDetailHero";
 import { CompetitionDetailLoading } from "@/components/competitions/CompetitionDetailLoading";
 import { CompetitionDetailNotFound } from "@/components/competitions/CompetitionDetailNotFound";
+import { CompetitionAdminPanel } from "@/components/competitions/CompetitionAdminPanel";
 import { CompetitionLeaderboardSection } from "@/components/competitions/CompetitionLeaderboardSection";
 import { CompetitionMyTeamStrip } from "@/components/competitions/CompetitionMyTeamStrip";
+import { CompetitionTeamPlayersDialog } from "@/components/competitions/CompetitionTeamPlayersDialog";
 import type { LeaderboardRow } from "@/components/LeaderboardTable";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +21,7 @@ interface Competition {
   name: string;
   description?: string;
   entryDeadline: string;
+  entriesFrozen?: boolean;
   participants?: unknown[];
 }
 
@@ -36,6 +40,8 @@ export default function CompetitionDetailPage() {
   const [board, setBoard] = useState<LeaderboardRow[]>([]);
   const [mine, setMine] = useState<MyEntry | null>(null);
   const [myRank, setMyRank] = useState<number | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [teamDialog, setTeamDialog] = useState<{ entryId: string; teamName: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +85,7 @@ export default function CompetitionDetailPage() {
         }
       })
       .catch(() => undefined);
-  }, [id, comp, session?.user?.email]);
+  }, [id, comp, session?.user?.email, session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user) {
@@ -92,8 +98,22 @@ export default function CompetitionDetailPage() {
       .catch(() => setMine(null));
   }, [id, session?.user]);
 
+  const refreshCompetition = () => {
+    fetch(`/api/competitions/${id}`)
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.ok) setComp(data as Competition);
+      })
+      .catch(() => undefined);
+  };
+
   if (loading) return <CompetitionDetailLoading />;
   if (loadError || !comp) return <CompetitionDetailNotFound />;
+
+  const entriesClosed =
+    comp.entriesFrozen === true || new Date() > new Date(comp.entryDeadline);
+  const isAdmin = session?.user?.role === "admin";
+  const revealAllSquads = comp.entriesFrozen === true || isAdmin;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 text-white shadow-2xl">
@@ -115,7 +135,37 @@ export default function CompetitionDetailPage() {
           ]}
         />
 
-        <CompetitionDetailHero competition={comp} />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <CompetitionDetailHero competition={comp} />
+          </div>
+          {isAdmin && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="mt-1 shrink-0 border-white/25 bg-white/5 text-white hover:bg-white/10"
+              onClick={() => setAdminOpen((o) => !o)}
+              aria-expanded={adminOpen}
+              aria-label={adminOpen ? "Hide competition editor" : "Edit competition"}
+            >
+              <Pencil className="size-4" />
+            </Button>
+          )}
+        </div>
+
+        {isAdmin && adminOpen && (
+          <CompetitionAdminPanel
+            competitionId={id}
+            initial={{
+              name: comp.name,
+              description: comp.description,
+              entryDeadline: comp.entryDeadline,
+              entriesFrozen: comp.entriesFrozen === true,
+            }}
+            onUpdated={refreshCompetition}
+          />
+        )}
 
         {mine && (
           <CompetitionMyTeamStrip
@@ -123,18 +173,38 @@ export default function CompetitionDetailPage() {
             teamName={mine.customTeamName}
             totalScore={mine.totalScore}
             rank={myRank}
+            entriesOpen={!entriesClosed}
           />
         )}
 
         <div className="flex flex-wrap gap-3">
-          <Link href={`/competitions/${id}/enter`} className="inline-flex">
+          {entriesClosed ? (
             <Button
               type="button"
-              className="h-11 rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90"
+              disabled
+              className="h-11 cursor-not-allowed rounded-xl border border-white/15 bg-white/10 px-6 font-semibold text-white/50"
             >
-              Enter / edit team
+              Entries closed
             </Button>
-          </Link>
+          ) : mine ? (
+            <Link href={`/competitions/${id}/my-team?edit=1`} className="inline-flex">
+              <Button
+                type="button"
+                className="h-11 rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90"
+              >
+                Edit team
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/competitions/${id}/enter`} className="inline-flex">
+              <Button
+                type="button"
+                className="h-11 rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90"
+              >
+                Enter team
+              </Button>
+            </Link>
+          )}
           <Link href={`/competitions/${id}/my-team`} className="inline-flex">
             <Button
               type="button"
@@ -144,9 +214,39 @@ export default function CompetitionDetailPage() {
               My team & matches
             </Button>
           </Link>
+          <Link href={`/competitions/${id}/players`} className="inline-flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+            >
+              {revealAllSquads ? "Submitted players" : "My squad"}
+            </Button>
+          </Link>
         </div>
 
-        <CompetitionLeaderboardSection rows={board} highlightEmail={session?.user?.email ?? null} />
+        <CompetitionLeaderboardSection
+          rows={board}
+          highlightEmail={session?.user?.email ?? null}
+          onTeamClick={(row) =>
+            setTeamDialog({ entryId: row.entryId, teamName: row.customTeamName })
+          }
+          privacyNote={
+            revealAllSquads
+              ? null
+              : "Only your team is shown here until entries are frozen. Admins always see every team."
+          }
+        />
+
+        <CompetitionTeamPlayersDialog
+          open={teamDialog !== null}
+          onOpenChange={(open) => {
+            if (!open) setTeamDialog(null);
+          }}
+          competitionId={id}
+          entryId={teamDialog?.entryId ?? null}
+          teamName={teamDialog?.teamName ?? null}
+        />
       </div>
     </div>
   );

@@ -31,8 +31,11 @@ export async function POST(req: Request, { params }: RouteParams) {
     await connectDb();
     const comp = await Competition.findById(id);
     if (!comp) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (new Date() > comp.entryDeadline) {
-      return NextResponse.json({ error: "Entry deadline passed" }, { status: 400 });
+    if (comp.entriesFrozen || new Date() > comp.entryDeadline) {
+      return NextResponse.json(
+        { error: comp.entriesFrozen ? "Entries are closed" : "Entry deadline passed" },
+        { status: 400 }
+      );
     }
     if (!comp.participants.map(String).includes(session.user.id)) {
       return NextResponse.json({ error: "Join the competition first" }, { status: 400 });

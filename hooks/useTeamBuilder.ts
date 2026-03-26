@@ -23,6 +23,12 @@ export function useTeamBuilder() {
     [tier1, tier2, tier3]
   );
 
+  const setTiers = useCallback((t1: string[], t2: string[], t3: string[]) => {
+    setTier1(t1);
+    setTier2(t2);
+    setTier3(t3);
+  }, []);
+
   const toggle = useCallback(
     (tier: TierKey, player: PlayerWithFranchise, pool: PlayerWithFranchise[]) => {
       const [current, set] =
@@ -54,6 +60,7 @@ export function useTeamBuilder() {
     captain,
     allSelected,
     setCaptain,
+    setTiers,
     toggle,
   };
 }

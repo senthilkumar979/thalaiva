@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
@@ -10,22 +10,39 @@ import { TeamBuilder } from "@/components/TeamBuilder";
 interface Competition {
   name: string;
   entryDeadline: string;
+  entriesFrozen?: boolean;
 }
 
 const THEME_BG = "#19398a";
 
 export default function EnterCompetitionPage() {
   const params = useParams();
+  const router = useRouter();
   const id = String(params.id);
   const { status } = useSession();
   const [comp, setComp] = useState<Competition | null>(null);
+  const [entryGate, setEntryGate] = useState<"loading" | "ok" | "redirect">("loading");
 
   useEffect(() => {
+    setEntryGate("loading");
     fetch(`/api/competitions/${id}`)
       .then((r) => r.json())
       .then(setComp)
       .catch(() => undefined);
   }, [id]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !comp) return;
+    fetch(`/api/competitions/${id}/entries/me`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((e) => {
+        if (e?.customTeamName) {
+          router.replace(`/competitions/${id}/my-team?edit=1`);
+          setEntryGate("redirect");
+        } else setEntryGate("ok");
+      })
+      .catch(() => setEntryGate("ok"));
+  }, [status, comp, id, router]);
 
   const shell = (children: React.ReactNode) => (
     <div
@@ -63,7 +80,20 @@ export default function EnterCompetitionPage() {
     );
   }
 
+  if (entryGate === "loading" || entryGate === "redirect") {
+    return shell(
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-white/80">
+        <Loader2 className="size-8 animate-spin" />
+        {entryGate === "redirect" ? (
+          <p className="text-sm text-white/60">You already have a team — opening My team…</p>
+        ) : null}
+      </div>
+    );
+  }
+
   const deadlinePassed = new Date() > new Date(comp.entryDeadline);
+  const frozen = comp.entriesFrozen === true;
+  const entriesClosed = deadlinePassed || frozen;
 
   return shell(
     <div className="space-y-10">
@@ -93,7 +123,11 @@ export default function EnterCompetitionPage() {
           </p>
         </div>
       </header>
-      <TeamBuilder competitionId={id} deadlinePassed={deadlinePassed} />
+      <TeamBuilder
+        competitionId={id}
+        entriesClosed={entriesClosed}
+        entriesClosedReason={frozen && !deadlinePassed ? "frozen" : "deadline"}
+      />
     </div>
   );
 }

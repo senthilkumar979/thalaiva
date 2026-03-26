@@ -9,6 +9,7 @@ import { EnterTeamNameField } from "@/components/EnterTeamNameField";
 import type { FranchiseOption } from "@/lib/franchiseTypes";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import { usePlayersByTier } from "@/hooks/usePlayersByTier";
+import { useHydrateTeamFromEntry } from "@/hooks/useHydrateTeamFromEntry";
 import type { TierKey } from "@/hooks/useTeamBuilder";
 import { useTeamBuilder } from "@/hooks/useTeamBuilder";
 import {
@@ -20,7 +21,12 @@ import {
 
 interface TeamBuilderProps {
   competitionId: string;
-  deadlinePassed: boolean;
+  /** Deadline passed or admin froze entries — no saves allowed. */
+  entriesClosed: boolean;
+  /** Shown when entries are closed (optional detail). */
+  entriesClosedReason?: "deadline" | "frozen";
+  /** Defaults to competition overview. */
+  afterSaveRedirectTo?: string;
 }
 
 function filterByFranchise(players: PlayerWithFranchise[], team: string): PlayerWithFranchise[] {
@@ -36,13 +42,19 @@ function filterByRole(players: PlayerWithFranchise[], role: RoleFilterValue): Pl
   return players.filter((p) => p.role === role);
 }
 
-export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps) => {
+export const TeamBuilder = ({
+  competitionId,
+  entriesClosed,
+  entriesClosedReason = "deadline",
+  afterSaveRedirectTo,
+}: TeamBuilderProps) => {
   const router = useRouter();
   const p1 = usePlayersByTier(1);
   const p2 = usePlayersByTier(3);
   const p3 = usePlayersByTier(5);
   const tb = useTeamBuilder();
   const [teamName, setTeamName] = useState("");
+  useHydrateTeamFromEntry(competitionId, tb.setTiers, tb.setCaptain, setTeamName);
   const [teamFilter, setTeamFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("all");
 
@@ -91,8 +103,12 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
     [allIds.length, compositionCounts]
   );
 
-  /** Submit enabled when composition rules are met (15 picks + role balance). Name & captain validated on submit. */
-  const canSubmit = compositionOk;
+  const canSubmit =
+    !entriesClosed &&
+    compositionOk &&
+    teamName.trim().length > 0 &&
+    !!tb.captain &&
+    allIds.includes(tb.captain);
 
   const { captain: capId, allSelected: capPool, setCaptain: setCap } = tb;
   useEffect(() => {
@@ -147,7 +163,7 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
       return;
     }
     toast.success("Team saved");
-    router.push(`/competitions/${competitionId}`);
+    router.push(afterSaveRedirectTo ?? `/competitions/${competitionId}`);
   };
 
   const removePlayer = useCallback(
@@ -159,8 +175,12 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
     [p1.players, p2.players, p3.players, tb]
   );
 
-  if (deadlinePassed) {
-    return <p className="text-sm text-white/70">The entry deadline has passed.</p>;
+  if (entriesClosed) {
+    const msg =
+      entriesClosedReason === "frozen"
+        ? "Entries for this competition are closed. Teams can no longer be edited."
+        : "The entry deadline has passed.";
+    return <p className="text-sm text-white/70">{msg}</p>;
   }
 
   return (

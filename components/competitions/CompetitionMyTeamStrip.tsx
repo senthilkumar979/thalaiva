@@ -9,6 +9,8 @@ interface CompetitionMyTeamStripProps {
   teamName: string;
   totalScore: number;
   rank: number | null;
+  /** When true, show shortcut to edit squad while entries are open. */
+  entriesOpen?: boolean;
 }
 
 export const CompetitionMyTeamStrip = ({
@@ -16,6 +18,7 @@ export const CompetitionMyTeamStrip = ({
   teamName,
   totalScore,
   rank,
+  entriesOpen = false,
 }: CompetitionMyTeamStripProps) => (
   <section className="relative overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent p-[1px] shadow-lg">
     <div className="rounded-[15px] bg-[#0a2469]/40 px-5 py-5 backdrop-blur-md sm:px-6 sm:py-6">
@@ -43,17 +46,30 @@ export const CompetitionMyTeamStrip = ({
               <p className="mt-0.5 text-3xl font-bold tabular-nums text-amber-200">#{rank}</p>
             </div>
           )}
-          <Link href={`/competitions/${competitionId}/my-team`} className="inline-flex">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="gap-2 border-white/25 bg-white/10 text-white hover:bg-white/15"
-            >
-              <BarChart3 className="size-4" />
-              Match breakdown
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {entriesOpen && (
+              <Link href={`/competitions/${competitionId}/my-team?edit=1`} className="inline-flex">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2 bg-white font-semibold text-[#19398a] hover:bg-white/90"
+                >
+                  Edit squad
+                </Button>
+              </Link>
+            )}
+            <Link href={`/competitions/${competitionId}/my-team`} className="inline-flex">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2 border-white/25 bg-white/10 text-white hover:bg-white/15"
+              >
+                <BarChart3 className="size-4" />
+                Match breakdown
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

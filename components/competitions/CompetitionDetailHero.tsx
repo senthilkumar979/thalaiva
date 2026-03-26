@@ -7,6 +7,8 @@ export interface CompetitionDetailData {
   name: string;
   description?: string;
   entryDeadline: string;
+  /** Admin closed entries before deadline. */
+  entriesFrozen?: boolean;
   participants?: unknown[];
 }
 
@@ -26,7 +28,9 @@ function formatDeadline(iso: string) {
 }
 
 export const CompetitionDetailHero = ({ competition: c }: CompetitionDetailHeroProps) => {
-  const open = new Date() < new Date(c.entryDeadline);
+  const frozen = c.entriesFrozen === true;
+  const beforeDeadline = new Date() < new Date(c.entryDeadline);
+  const open = !frozen && beforeDeadline;
   const count = Array.isArray(c.participants) ? c.participants.length : 0;
 
   return (
@@ -47,7 +51,7 @@ export const CompetitionDetailHero = ({ competition: c }: CompetitionDetailHeroP
                 : "bg-white/10 text-white/45 ring-white/15"
             )}
           >
-            {open ? "Entries open" : "Entry closed"}
+            {open ? "Entries open" : frozen ? "Entries closed (frozen)" : "Entry closed"}
           </span>
         </div>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl sm:leading-tight">

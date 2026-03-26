@@ -6,11 +6,16 @@ import { LeaderboardTable, type LeaderboardRow } from "@/components/LeaderboardT
 interface CompetitionLeaderboardSectionProps {
   rows: LeaderboardRow[];
   highlightEmail: string | null;
+  onTeamClick?: (row: LeaderboardRow) => void;
+  /** Shown when squads are private (before freeze). */
+  privacyNote?: string | null;
 }
 
 export const CompetitionLeaderboardSection = ({
   rows,
   highlightEmail,
+  onTeamClick,
+  privacyNote,
 }: CompetitionLeaderboardSectionProps) => (
   <section className="space-y-4">
     <div className="flex items-center gap-2">
@@ -20,6 +25,9 @@ export const CompetitionLeaderboardSection = ({
       <div>
         <h2 className="text-lg font-semibold tracking-tight text-white">Leaderboard</h2>
         <p className="text-sm text-white/50">Rankings by total fantasy points.</p>
+        {privacyNote ? (
+          <p className="mt-1 max-w-xl text-xs leading-snug text-amber-200/80">{privacyNote}</p>
+        ) : null}
       </div>
     </div>
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.97] p-1 shadow-2xl">
@@ -27,7 +35,7 @@ export const CompetitionLeaderboardSection = ({
         {rows.length === 0 ? (
           <p className="py-12 text-center text-sm text-slate-500">No entries yet. Be the first to join.</p>
         ) : (
-          <LeaderboardTable rows={rows} highlightEmail={highlightEmail} />
+          <LeaderboardTable rows={rows} highlightEmail={highlightEmail} onTeamClick={onTeamClick} />
         )}
       </div>
     </div>

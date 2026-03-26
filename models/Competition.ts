@@ -5,6 +5,8 @@ export interface ICompetition {
   description: string;
   createdBy: Types.ObjectId;
   entryDeadline: Date;
+  /** When true, no new or updated entries (admin override). */
+  entriesFrozen: boolean;
   isActive: boolean;
   participants: Types.ObjectId[];
 }
@@ -19,6 +21,7 @@ const CompetitionSchema = new Schema<ICompetition>(
     description: { type: String, default: "" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     entryDeadline: { type: Date, required: true },
+    entriesFrozen: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },

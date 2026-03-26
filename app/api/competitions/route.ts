@@ -38,6 +38,7 @@ export async function POST(req: Request) {
       description: parsed.data.description ?? "",
       createdBy: session.user.id,
       entryDeadline: new Date(parsed.data.entryDeadline),
+      entriesFrozen: false,
       isActive: true,
       participants: [session.user.id],
     });
