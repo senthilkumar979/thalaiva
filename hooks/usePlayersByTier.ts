@@ -7,7 +7,7 @@ export interface PlayerWithFranchise {
   name: string;
   tier: number;
   role: string;
-  franchise: { name: string; shortCode: string };
+  franchise: { name: string; shortCode: string; logoUrl?: string };
 }
 
 export function usePlayersByTier(tier: 1 | 3 | 5) {

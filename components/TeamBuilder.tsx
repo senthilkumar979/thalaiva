@@ -1,20 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { TierColumn } from "@/components/TierColumn";
+import { EnterPlayerPool } from "@/components/EnterPlayerPool";
+import type { FranchiseOption } from "@/lib/franchiseTypes";
+import { EnterSquadSidebar } from "@/components/EnterSquadSidebar";
+import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import { usePlayersByTier } from "@/hooks/usePlayersByTier";
+import type { TierKey } from "@/hooks/useTeamBuilder";
 import { useTeamBuilder } from "@/hooks/useTeamBuilder";
+import {
+  countRolesFromIds,
+  squadCompositionMessages,
+  squadCompositionSatisfied,
+  type RoleFilterValue,
+} from "@/lib/squadComposition";
 
 interface TeamBuilderProps {
   competitionId: string;
   deadlinePassed: boolean;
+}
+
+function filterByFranchise(players: PlayerWithFranchise[], team: string): PlayerWithFranchise[] {
+  if (team === "all") return players;
+  return players.filter((p) => {
+    if (p.franchise && typeof p.franchise === "object") return p.franchise.shortCode === team;
+    return false;
+  });
+}
+
+function filterByRole(players: PlayerWithFranchise[], role: RoleFilterValue): PlayerWithFranchise[] {
+  if (role === "all") return players;
+  return players.filter((p) => p.role === role);
 }
 
 export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps) => {
@@ -24,21 +42,90 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
   const p3 = usePlayersByTier(5);
   const tb = useTeamBuilder();
   const [teamName, setTeamName] = useState("");
+  const [teamFilter, setTeamFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("all");
 
-  useEffect(() => {
-    const full = tb.tier1.length === 5 && tb.tier2.length === 5 && tb.tier3.length === 5;
-    if (full) tb.setStep("captain");
-    else {
-      tb.setStep("pick");
-      tb.setCaptain(null);
+  const playerById = useMemo(() => {
+    const m = new Map<string, PlayerWithFranchise>();
+    for (const p of [...p1.players, ...p2.players, ...p3.players]) m.set(p._id, p);
+    return m;
+  }, [p1.players, p2.players, p3.players]);
+
+  const franchiseOptions = useMemo((): FranchiseOption[] => {
+    const map = new Map<string, { name: string; logoUrl?: string }>();
+    for (const p of [...p1.players, ...p2.players, ...p3.players]) {
+      if (p.franchise && typeof p.franchise === "object") {
+        const prev = map.get(p.franchise.shortCode);
+        const logoUrl = p.franchise.logoUrl || prev?.logoUrl;
+        map.set(p.franchise.shortCode, { name: p.franchise.name, logoUrl });
+      }
     }
-    // Intentionally depend on tier lengths only to avoid resetting captain while picking.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- tb.setStep/tb.setCaptain are stable
-  }, [tb.tier1.length, tb.tier2.length, tb.tier3.length]);
+    return Array.from(map.entries())
+      .map(([code, v]) => ({ code, name: v.name, logoUrl: v.logoUrl }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [p1.players, p2.players, p3.players]);
+
+  const f1 = useMemo(
+    () => filterByRole(filterByFranchise(p1.players, teamFilter), roleFilter),
+    [p1.players, teamFilter, roleFilter]
+  );
+  const f2 = useMemo(
+    () => filterByRole(filterByFranchise(p2.players, teamFilter), roleFilter),
+    [p2.players, teamFilter, roleFilter]
+  );
+  const f3 = useMemo(
+    () => filterByRole(filterByFranchise(p3.players, teamFilter), roleFilter),
+    [p3.players, teamFilter, roleFilter]
+  );
+
+  const allIds = useMemo(
+    () => [...tb.tier1, ...tb.tier2, ...tb.tier3],
+    [tb.tier1, tb.tier2, tb.tier3]
+  );
+
+  const compositionCounts = useMemo(() => countRolesFromIds(allIds, playerById), [allIds, playerById]);
+
+  const compositionOk = useMemo(
+    () => (allIds.length === 15 ? squadCompositionSatisfied(compositionCounts) : false),
+    [allIds.length, compositionCounts]
+  );
+
+  const canSubmit = useMemo(() => {
+    if (allIds.length !== 15 || !teamName.trim() || !tb.captain) return false;
+    if (!allIds.includes(tb.captain)) return false;
+    return compositionOk;
+  }, [allIds, teamName, tb.captain, compositionOk]);
+
+  const { captain: capId, allSelected: capPool, setCaptain: setCap } = tb;
+  useEffect(() => {
+    if (capId && !capPool.includes(capId)) setCap(null);
+  }, [capId, capPool, setCap]);
+
+  const handleTierToggle = useCallback(
+    (tier: TierKey, player: PlayerWithFranchise, pool: PlayerWithFranchise[]) => {
+      const inTier =
+        (tier === 1 && tb.tier1.includes(player._id)) ||
+        (tier === 3 && tb.tier2.includes(player._id)) ||
+        (tier === 5 && tb.tier3.includes(player._id));
+      if (!inTier && player.role === "allrounder") {
+        const ar = allIds.filter((id) => playerById.get(id)?.role === "allrounder").length;
+        if (ar >= 3) {
+          toast.error("You can pick at most 3 all-rounders");
+          return;
+        }
+      }
+      tb.toggle(tier, player, pool);
+    },
+    [tb, allIds, playerById]
+  );
 
   const submit = async () => {
     if (!teamName.trim() || !tb.captain) {
       toast.error("Team name and captain required");
+      return;
+    }
+    if (!compositionOk) {
+      toast.error(squadCompositionMessages(compositionCounts).join(" ") || "Invalid squad composition");
       return;
     }
     const res = await fetch(`/api/competitions/${competitionId}/entries`, {
@@ -61,79 +148,51 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
     router.push(`/competitions/${competitionId}`);
   };
 
+  const removePlayer = useCallback(
+    (tier: TierKey, playerId: string) => {
+      const pool = tier === 1 ? p1.players : tier === 3 ? p2.players : p3.players;
+      const pl = pool.find((x) => x._id === playerId);
+      if (pl) tb.toggle(tier, pl, pool);
+    },
+    [p1.players, p2.players, p3.players, tb]
+  );
+
   if (deadlinePassed) {
-    return <p className="text-sm text-muted-foreground">The entry deadline has passed.</p>;
+    return <p className="text-sm text-white/70">The entry deadline has passed.</p>;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Build your squad</CardTitle>
-        <CardDescription>Pick five per tier with unique franchises in each column.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="team">Team name</Label>
-          <Input
-            id="team"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            placeholder="e.g. Super Kings XI"
-          />
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <TierColumn
-            title="Tier 1 (1 pt)"
-            tier={1}
-            players={p1.players}
-            selectedIds={tb.tier1}
-            onToggle={(tier, pl) => tb.toggle(tier, pl, p1.players)}
-          />
-          <TierColumn
-            title="Tier 2 (3 pt)"
-            tier={3}
-            players={p2.players}
-            selectedIds={tb.tier2}
-            onToggle={(tier, pl) => tb.toggle(tier, pl, p2.players)}
-          />
-          <TierColumn
-            title="Tier 3 (5 pt)"
-            tier={5}
-            players={p3.players}
-            selectedIds={tb.tier3}
-            onToggle={(tier, pl) => tb.toggle(tier, pl, p3.players)}
-          />
-        </div>
-        <Separator />
-        {tb.step === "captain" && (
-          <div className="space-y-3">
-            <div className="text-sm font-medium">Choose captain (2× points)</div>
-            <div className="flex flex-wrap gap-2">
-              {tb.allSelected.map((id) => {
-                const label =
-                  p1.players.find((x) => x._id === id)?.name ??
-                  p2.players.find((x) => x._id === id)?.name ??
-                  p3.players.find((x) => x._id === id)?.name ??
-                  id;
-                return (
-                  <Button
-                    key={id}
-                    type="button"
-                    size="sm"
-                    variant={tb.captain === id ? "default" : "outline"}
-                    onClick={() => tb.setCaptain(id)}
-                  >
-                    {label}
-                  </Button>
-                );
-              })}
-            </div>
-            <Button type="button" onClick={submit} disabled={!tb.captain}>
-              Submit team
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+      <EnterSquadSidebar
+        teamName={teamName}
+        onTeamNameChange={setTeamName}
+        tier1Ids={tb.tier1}
+        tier2Ids={tb.tier2}
+        tier3Ids={tb.tier3}
+        playerById={playerById}
+        captain={tb.captain}
+        onCaptain={tb.setCaptain}
+        onRemove={removePlayer}
+        onSubmit={submit}
+        compositionCounts={compositionCounts}
+        compositionOk={compositionOk}
+        canSubmit={canSubmit}
+      />
+      <EnterPlayerPool
+        teamFilter={teamFilter}
+        onTeamFilterChange={setTeamFilter}
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+        franchiseOptions={franchiseOptions}
+        f1={f1}
+        f2={f2}
+        f3={f3}
+        p1={p1}
+        p2={p2}
+        p3={p3}
+        tb={tb}
+        onTierToggle={handleTierToggle}
+      />
+    </div>
   );
 };

@@ -17,7 +17,6 @@ export function useTeamBuilder() {
   const [tier2, setTier2] = useState<string[]>([]);
   const [tier3, setTier3] = useState<string[]>([]);
   const [captain, setCaptain] = useState<string | null>(null);
-  const [step, setStep] = useState<"pick" | "captain">("pick");
 
   const allSelected = useMemo(
     () => [...tier1, ...tier2, ...tier3],
@@ -31,6 +30,7 @@ export function useTeamBuilder() {
       const pid = player._id;
       if (current.includes(pid)) {
         set(current.filter((x) => x !== pid));
+        setCaptain((c) => (c === pid ? null : c));
         return;
       }
       if (current.length >= LIMIT) return;
@@ -52,10 +52,8 @@ export function useTeamBuilder() {
     tier2,
     tier3,
     captain,
-    step,
     allSelected,
     setCaptain,
-    setStep,
     toggle,
   };
 }

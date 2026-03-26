@@ -1,4 +1,9 @@
 import type { Types } from "mongoose";
+import {
+  countRolesFromPlayerDocs,
+  squadCompositionMessages,
+  squadCompositionSatisfied,
+} from "@/lib/squadComposition";
 import { Player, type PlayerTier } from "@/models/Player";
 
 export interface EntryPlayerPayload {
@@ -35,6 +40,13 @@ export async function validateEntrySelection(payload: EntryPlayerPayload): Promi
   const allIds = [...payload.tier1Players, ...payload.tier2Players, ...payload.tier3Players];
   if (new Set(allIds).size !== 15) throw new Error("A player can only appear once across tiers");
   if (!allIds.includes(payload.captain)) throw new Error("Captain must be one of the 15 players");
+  const allPlayers = await Player.find({ _id: { $in: allIds } }).select("role").lean();
+  if (allPlayers.length !== 15) throw new Error("Invalid player selection");
+  const counts = countRolesFromPlayerDocs(allPlayers);
+  if (!squadCompositionSatisfied(counts)) {
+    const detail = squadCompositionMessages(counts).join(" ");
+    throw new Error(detail || "Squad does not meet role composition rules");
+  }
   void t1;
   void t2;
   void t3;

@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         <AppProviders>
           <SiteHeader />
-          <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+          <main className="mx-auto max-w-10xl px-4 py-8">{children}</main>
         </AppProviders>
       </body>
     </html>
