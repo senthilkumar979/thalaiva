@@ -6,9 +6,17 @@ import { requireAdmin } from "@/lib/session";
 import { Franchise } from "@/models/Franchise";
 import { Player } from "@/models/Player";
 
-const bodySchema = z.object({
-  csv: z.string().min(1),
+const bulkRowSchema = z.object({
+  name: z.string().min(1),
+  franchise: z.string().min(1),
+  tier: z.union([z.literal(1), z.literal(3), z.literal(5)]),
+  role: z.enum(["bat", "bowl", "allrounder", "wk"]),
 });
+
+const bodySchema = z.union([
+  z.object({ csv: z.string().min(1) }),
+  z.object({ rows: z.array(bulkRowSchema).min(1) }),
+]);
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +25,8 @@ export async function POST(req: Request) {
     const parsed = bodySchema.safeParse(json);
     if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     await connectDb();
-    const rows = parsePlayerCsv(parsed.data.csv);
+    const rows =
+      "csv" in parsed.data ? parsePlayerCsv(parsed.data.csv) : parsed.data.rows;
     const created: string[] = [];
     for (const row of rows) {
       const fr = await Franchise.findOne({
