@@ -26,7 +26,16 @@ export function CompositionRow({
   const ok = isMaxRule ? max !== undefined && current <= max : min !== undefined && current >= min;
   return (
     <div className="flex items-center justify-between gap-2 text-[11px]">
-      <span className={labelTone ? compositionLabelClass(labelTone) : "text-white/55"}>{label}</span>
+      <span className="flex min-w-0 items-center gap-1.5">
+        {labelTone ? (
+          <>
+            <RoleIcon role={labelTone} size="sm" className="opacity-95" />
+            <span className={compositionLabelClass(labelTone)}>{label}</span>
+          </>
+        ) : (
+          <span className="text-white/55">{label}</span>
+        )}
+      </span>
       <span
         className={cn(
           "font-mono font-medium tabular-nums",

@@ -5,6 +5,8 @@ import {
   type PlayerPreviewRow,
 } from "@/lib/parseXlsxPlayers";
 import { tierLabel } from "@/lib/playerExcelMap";
+import { RoleIcon } from "@/components/RoleIcon";
+import { playerRoleLabel } from "@/lib/playerRoleLabel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,7 +67,16 @@ export const PlayersPreview = ({ rows, onConfirm, onCancel, isUploading }: Playe
                   <TableCell className="font-medium">{r.name || "—"}</TableCell>
                   <TableCell>{r.franchise || "—"}</TableCell>
                   <TableCell>{tierLabel(r.tier)}</TableCell>
-                  <TableCell>{r.role ?? "—"}</TableCell>
+                  <TableCell>
+                    {r.role ? (
+                      <span className="inline-flex items-center gap-2">
+                        <RoleIcon role={r.role} size="sm" />
+                        {playerRoleLabel(r.role)}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                   <TableCell>
                     {ok ? (
                       <Badge variant="secondary">OK</Badge>
