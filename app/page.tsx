@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link'
 import {
   ArrowRight,
   Crown,
@@ -6,36 +6,39 @@ import {
   Sparkles,
   Trophy,
   Users,
-} from "lucide-react";
-import { HomeHeroPrimaryActions } from "@/components/HomeHeroPrimaryActions";
-import { HomePlayersExplorer } from "@/components/home/HomePlayersExplorer";
-import { getPlayersGroupedByFranchise } from "@/lib/queries/homePlayers";
+} from 'lucide-react'
+import { HomeHeroPrimaryActions } from '@/components/HomeHeroPrimaryActions'
+import { HomePlayersExplorer } from '@/components/home/HomePlayersExplorer'
+import { getPlayersGroupedByFranchise } from '@/lib/queries/homePlayers'
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 const features = [
   {
     icon: Layers,
-    title: "Tier squads",
-    line: "Balance across three price bands",
-    body: "Five picks per tier, five franchises each — strict spread rules keep every squad competitive.",
+    title: 'Tier squads',
+    line: 'Balance across three price bands',
+    body:
+      'Five picks per tier, five franchises each — strict spread rules keep every squad competitive.',
   },
   {
     icon: Crown,
-    title: "Captain ×2",
-    line: "One star, double the points",
-    body: "Name a captain from your fifteen; their fantasy score is doubled every match.",
+    title: 'Captain ×2',
+    line: 'One star, double the points',
+    body:
+      'Name a captain from your fifteen; their fantasy score is doubled every match.',
   },
   {
     icon: Users,
-    title: "Your leagues",
-    line: "Create or join rooms",
-    body: "Separate teams and leaderboards per competition, with clear entry deadlines.",
+    title: 'Your leagues',
+    line: 'Create or join rooms',
+    body:
+      'Separate teams and leaderboards per competition, with clear entry deadlines.',
   },
-] as const;
+] as const
 
 export default async function HomePage() {
-  const teams = await getPlayersGroupedByFranchise();
+  const teams = await getPlayersGroupedByFranchise()
 
   return (
     <div className="space-y-12 pb-4">
@@ -64,41 +67,34 @@ export default async function HomePage() {
               Thalaiva IPL Fantasy
             </h1>
             <p className="mt-5 text-pretty text-base leading-relaxed text-white/70 sm:text-lg">
-              Build fifteen-player squads across cost tiers, run or join leagues with friends, and chase
-              the leaderboard as live scores land after every ball.
+              Build fifteen-player squads across cost tiers, run or join leagues
+              with friends, and chase the leaderboard as live scores land after
+              every ball.
             </p>
             <HomeHeroPrimaryActions />
           </div>
 
-          <div className="pointer-events-none absolute bottom-8 right-8 hidden opacity-[0.12] lg:block" aria-hidden>
+          <div
+            className="pointer-events-none absolute bottom-8 right-8 hidden opacity-[0.12] lg:block"
+            aria-hidden
+          >
             <Trophy className="size-40 text-white" strokeWidth={1} />
           </div>
         </div>
       </section>
 
-      <section aria-labelledby="rosters-heading" className="space-y-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 id="rosters-heading" className="text-2xl font-semibold tracking-tight">
-              Franchise rosters
-            </h2>
-            <p className="mt-1 max-w-2xl text-muted-foreground">
-              Every active player in the pool, grouped by IPL side — filter by tier, search by name, and
-              scan roles before you draft.
-            </p>
-          </div>
-        </div>
-        <HomePlayersExplorer teams={teams} />
-      </section>
-
       <section aria-labelledby="features-heading" className="space-y-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="features-heading" className="text-2xl font-semibold tracking-tight">
+            <h2
+              id="features-heading"
+              className="text-2xl font-semibold tracking-tight"
+            >
               Built for season-long drama
             </h2>
             <p className="mt-1 max-w-xl text-muted-foreground">
-              Rules that reward planning — not just picking the same stars every week.
+              Rules that reward planning — not just picking the same stars every
+              week.
             </p>
           </div>
           <Link
@@ -120,12 +116,16 @@ export default async function HomePage() {
                 <Icon className="size-6" aria-hidden />
               </div>
               <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
-              <p className="text-sm font-medium text-muted-foreground">{line}</p>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                {line}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {body}
+              </p>
             </li>
           ))}
         </ul>
       </section>
     </div>
-  );
+  )
 }
