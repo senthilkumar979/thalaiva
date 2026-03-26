@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EnterPlayerPool } from "@/components/EnterPlayerPool";
-import type { FranchiseOption } from "@/lib/franchiseTypes";
 import { EnterSquadSidebar } from "@/components/EnterSquadSidebar";
+import { EnterTeamNameField } from "@/components/EnterTeamNameField";
+import type { FranchiseOption } from "@/lib/franchiseTypes";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import { usePlayersByTier } from "@/hooks/usePlayersByTier";
 import type { TierKey } from "@/hooks/useTeamBuilder";
@@ -90,11 +91,8 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
     [allIds.length, compositionCounts]
   );
 
-  const canSubmit = useMemo(() => {
-    if (allIds.length !== 15 || !teamName.trim() || !tb.captain) return false;
-    if (!allIds.includes(tb.captain)) return false;
-    return compositionOk;
-  }, [allIds, teamName, tb.captain, compositionOk]);
+  /** Submit enabled when composition rules are met (15 picks + role balance). Name & captain validated on submit. */
+  const canSubmit = compositionOk;
 
   const { captain: capId, allSelected: capPool, setCaptain: setCap } = tb;
   useEffect(() => {
@@ -120,12 +118,16 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
   );
 
   const submit = async () => {
-    if (!teamName.trim() || !tb.captain) {
-      toast.error("Team name and captain required");
-      return;
-    }
     if (!compositionOk) {
       toast.error(squadCompositionMessages(compositionCounts).join(" ") || "Invalid squad composition");
+      return;
+    }
+    if (!teamName.trim() || !tb.captain) {
+      toast.error("Enter a squad name and choose a captain (tap the crown on a player).");
+      return;
+    }
+    if (!allIds.includes(tb.captain)) {
+      toast.error("Captain must be one of your 15 players.");
       return;
     }
     const res = await fetch(`/api/competitions/${competitionId}/entries`, {
@@ -162,11 +164,12 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
   }
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-      <EnterSquadSidebar
-        teamName={teamName}
-        onTeamNameChange={setTeamName}
-        tier1Ids={tb.tier1}
+    <div className="flex flex-col gap-6 lg:gap-8">
+      <EnterTeamNameField teamName={teamName} onTeamNameChange={setTeamName} />
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+        <EnterSquadSidebar
+          teamName={teamName}
+          tier1Ids={tb.tier1}
         tier2Ids={tb.tier2}
         tier3Ids={tb.tier3}
         playerById={playerById}
@@ -193,6 +196,7 @@ export const TeamBuilder = ({ competitionId, deadlinePassed }: TeamBuilderProps)
         tb={tb}
         onTierToggle={handleTierToggle}
       />
+      </div>
     </div>
   );
 };
