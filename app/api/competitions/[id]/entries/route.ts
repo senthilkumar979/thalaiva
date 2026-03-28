@@ -6,6 +6,7 @@ import { validateEntrySelection } from "@/lib/validation";
 import { requireUser } from "@/lib/session";
 import { Competition } from "@/models/Competition";
 import { Entry } from "@/models/Entry";
+import { syncRosterVersionFromEntryIfNoSwaps } from "@/lib/entryRosterVersion";
 
 const entrySchema = z.object({
   customTeamName: z.string().min(1).max(120),
@@ -61,6 +62,7 @@ export async function POST(req: Request, { params }: RouteParams) {
       entry.totalScore = prevScore;
     }
     await entry.save();
+    await syncRosterVersionFromEntryIfNoSwaps(entry.toObject());
     return NextResponse.json(entry);
   } catch (e) {
     const err = e as Error & { status?: number };

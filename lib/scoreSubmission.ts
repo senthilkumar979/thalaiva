@@ -3,7 +3,7 @@ import { adminStatInputToFantasyPoints } from "@/lib/adminScoreToUpdatedStats";
 import { connectDb } from "@/lib/db";
 import { Competition } from "@/models/Competition";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
-import { Entry, type IEntry } from "@/models/Entry";
+import { Entry } from "@/models/Entry";
 import { Match } from "@/models/Match";
 import { Player } from "@/models/Player";
 import {
@@ -13,6 +13,7 @@ import {
   type IFieldingStats,
 } from "@/models/PlayerMatchScore";
 import { FANTASY_SCORING_POINT_VALUES as P } from "@/lib/updatedScoring";
+import { resolveEntryRosterForMatch } from "@/lib/resolveEntryRosterForMatch";
 
 export interface PlayerStatInput {
   playerId: string;
@@ -21,14 +22,6 @@ export interface PlayerStatInput {
   Batting: IBattingStats;
   Bowling: IBowlingStats;
   Fielding: IFieldingStats;
-}
-
-function entryPlayerIds(entry: IEntry): Types.ObjectId[] {
-  return [
-    ...entry.tier1Players,
-    ...entry.tier2Players,
-    ...entry.tier3Players,
-  ];
 }
 
 function assignRanks(rows: { totalPointsThisMatch: number; rankThisMatch: number }[]): void {
@@ -42,6 +35,7 @@ function assignRanks(rows: { totalPointsThisMatch: number; rankThisMatch: number
 async function scoreEntriesForCompetition(
   competitionId: Types.ObjectId,
   matchId: Types.ObjectId,
+  matchNumber: number,
   matchScoresByPlayer: Map<string, number>,
   session: ClientSession
 ): Promise<void> {
@@ -61,15 +55,16 @@ async function scoreEntriesForCompetition(
   }[] = [];
 
   for (const e of entries) {
-    const playerIds = entryPlayerIds(e);
+    const roster = await resolveEntryRosterForMatch(e._id, matchNumber, e, session);
+    const playerIds = roster.playerIds;
     const playersWithPoints: (typeof cmsRows)[0]["playersWithPoints"] = [];
     let total = 0;
     for (const pid of playerIds) {
       const key = String(pid);
       const raw = matchScoresByPlayer.get(key) ?? 0;
       if (raw === 0) continue;
-      const isCaptain = String(e.captain) === key;
-      const isViceCaptain = Boolean(e.viceCaptain && String(e.viceCaptain) === key);
+      const isCaptain = String(roster.captain) === key;
+      const isViceCaptain = Boolean(roster.viceCaptain && String(roster.viceCaptain) === key);
       let mult = 1;
       if (isCaptain) mult = P.CAPTAIN_MULTIPLIER;
       else if (isViceCaptain) mult = P.VICE_CAPTAIN_MULTIPLIER;
@@ -185,7 +180,7 @@ export async function submitMatchScores(
 
     const competitions = await Competition.find({ isActive: true }).session(session).lean();
     for (const c of competitions) {
-      await scoreEntriesForCompetition(c._id, match._id, matchScoresByPlayer, session);
+      await scoreEntriesForCompetition(c._id, match._id, match.matchNumber, matchScoresByPlayer, session);
     }
 
     if (pomId) {

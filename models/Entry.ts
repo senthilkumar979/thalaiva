@@ -12,6 +12,12 @@ export interface IEntry {
   /** Set on all new submissions; older entries may omit until updated. */
   viceCaptain?: Types.ObjectId;
   totalScore: number;
+  /** Player swaps used in this competition (max 6). */
+  swapCountUsed?: number;
+  /** Captain changed at most once per competition (during a swap window). */
+  captainChangeUsed?: boolean;
+  /** Vice-captain changed at most once per competition (during a swap window). */
+  viceCaptainChangeUsed?: boolean;
 }
 
 export interface IEntryDocument extends IEntry {
@@ -29,6 +35,9 @@ const EntrySchema = new Schema<IEntry>(
     captain: { type: Schema.Types.ObjectId, ref: "Player", required: true },
     viceCaptain: { type: Schema.Types.ObjectId, ref: "Player", required: false },
     totalScore: { type: Number, default: 0 },
+    swapCountUsed: { type: Number, default: 0 },
+    captainChangeUsed: { type: Boolean, default: false },
+    viceCaptainChangeUsed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

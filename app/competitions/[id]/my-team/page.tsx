@@ -173,6 +173,7 @@ export default function MyTeamMatchesPage() {
             totalScore={myEntry.totalScore ?? 0}
             rank={myRank}
             entriesOpen={entriesOpen}
+            swapsHref={entriesClosed ? `/competitions/${id}/my-team/swaps` : undefined}
           />
         )}
 
