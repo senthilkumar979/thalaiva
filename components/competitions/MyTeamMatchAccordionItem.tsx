@@ -68,6 +68,11 @@ export const MyTeamMatchAccordionItem = ({ competitionId, row }: MyTeamMatchAcco
                           Captain ×2
                         </Badge>
                       ) : null}
+                      {!r.isCaptain && r.isViceCaptain ? (
+                        <Badge className="border-sky-400/30 bg-sky-500/20 text-[10px] text-sky-100">
+                          Vice ×1.5
+                        </Badge>
+                      ) : null}
                     </div>
                     <p className="text-[11px] text-white/50">
                       {r.player.franchise?.shortCode ?? "—"}

@@ -9,6 +9,7 @@ export interface MyTeamPlayerPointsRow {
     role?: string;
   };
   isCaptain: boolean;
+  isViceCaptain: boolean;
   rawPoints: number;
   captainMultiplied: number;
 }
@@ -41,7 +42,13 @@ function serializeFranchise(f: unknown): LeanFranchise | undefined {
 }
 
 function serializePlayerPoints(
-  rows: { player: unknown; isCaptain: boolean; rawPoints: number; captainMultiplied: number }[]
+  rows: {
+    player: unknown;
+    isCaptain: boolean;
+    isViceCaptain?: boolean;
+    rawPoints: number;
+    captainMultiplied: number;
+  }[]
 ): MyTeamPlayerPointsRow[] {
   return rows.map((row) => {
     const p = row.player;
@@ -67,6 +74,7 @@ function serializePlayerPoints(
     return {
       player,
       isCaptain: row.isCaptain,
+      isViceCaptain: Boolean(row.isViceCaptain),
       rawPoints: row.rawPoints,
       captainMultiplied: row.captainMultiplied,
     };
@@ -91,6 +99,7 @@ export function buildMyTeamMatchRows(
       playersWithPoints: {
         player: unknown;
         isCaptain: boolean;
+        isViceCaptain?: boolean;
         rawPoints: number;
         captainMultiplied: number;
       }[];

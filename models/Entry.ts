@@ -9,6 +9,8 @@ export interface IEntry {
   tier2Players: Types.ObjectId[];
   tier3Players: Types.ObjectId[];
   captain: Types.ObjectId;
+  /** Set on all new submissions; older entries may omit until updated. */
+  viceCaptain?: Types.ObjectId;
   totalScore: number;
 }
 
@@ -25,6 +27,7 @@ const EntrySchema = new Schema<IEntry>(
     tier2Players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
     tier3Players: [{ type: Schema.Types.ObjectId, ref: "Player" }],
     captain: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+    viceCaptain: { type: Schema.Types.ObjectId, ref: "Player", required: false },
     totalScore: { type: Number, default: 0 },
   },
   { timestamps: true }
@@ -57,6 +60,19 @@ EntrySchema.pre("save", async function () {
   ];
   if (new Set(all).size !== 15) throw new Error("Duplicate player across tiers");
   if (!all.includes(String(this.captain))) throw new Error("Captain must be one of the 15 players");
+  if (this.viceCaptain) {
+    if (!all.includes(String(this.viceCaptain))) throw new Error("Vice-captain must be one of the 15 players");
+    if (String(this.captain) === String(this.viceCaptain)) {
+      throw new Error("Captain and vice-captain must be different players");
+    }
+    const [capDoc, viceDoc] = await Promise.all([
+      Player.findById(this.captain).select("franchise").lean(),
+      Player.findById(this.viceCaptain).select("franchise").lean(),
+    ]);
+    if (String(capDoc?.franchise) === String(viceDoc?.franchise)) {
+      throw new Error("Captain and vice-captain must be from different franchises");
+    }
+  }
 });
 
 export const Entry: Model<IEntry> =

@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown } from "lucide-react";
+import { Crown, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PickRow, TierProgress } from "@/components/EnterSquadSidebarParts";
 import { SquadCompositionPanel } from "@/components/SquadCompositionPanel";
@@ -18,7 +18,9 @@ interface EnterSquadSidebarProps {
   tier3Ids: string[];
   playerById: Map<string, PlayerWithFranchise>;
   captain: string | null;
+  viceCaptain: string | null;
   onCaptain: (id: string) => void;
+  onViceCaptain: (id: string) => void;
   onRemove: (tier: TierKey, playerId: string) => void;
   onSubmit: () => void;
   compositionCounts: SquadRoleCounts;
@@ -33,7 +35,9 @@ export const EnterSquadSidebar = ({
   tier3Ids,
   playerById,
   captain,
+  viceCaptain,
   onCaptain,
+  onViceCaptain,
   onRemove,
   onSubmit,
   compositionCounts,
@@ -88,7 +92,9 @@ export const EnterSquadSidebar = ({
                     player={pl}
                     showCaptain
                     isCaptain={captain === id}
+                    isViceCaptain={viceCaptain === id}
                     onCaptain={() => onCaptain(id)}
+                    onViceCaptain={() => onViceCaptain(id)}
                     onRemove={() => onRemove(t.key, id)}
                   />
                 );
@@ -100,16 +106,21 @@ export const EnterSquadSidebar = ({
 
       {total > 0 && (
         <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
-          <Crown className="mb-1 inline size-3.5 text-amber-300" /> Tap a crown to set your captain
-          (2× points). Any selected player can be captain.
+          <Crown className="mb-1 inline size-3.5 text-amber-300" /> Crown = captain (×2).{" "}
+          <Shield className="mb-0.5 inline size-3.5 text-sky-300" /> Shield = vice-captain (×1.5). Vice must be a
+          different franchise than captain.
         </div>
       )}
 
-      {full && compositionOk && (!teamName.trim() || !captain) && (
+      {full && compositionOk && (!teamName.trim() || !captain || !viceCaptain) && (
         <p className="text-[11px] leading-snug text-amber-200/85">
           {!teamName.trim()
-            ? "Enter a squad name in the field above, and choose a captain — then submit."
-            : "Choose a captain (tap a crown on a player) — then submit."}
+            ? "Enter a squad name above, then set captain and vice-captain — then submit."
+            : !captain
+              ? "Choose a captain (crown), then a vice-captain (shield) from a different franchise."
+              : !viceCaptain
+                ? "Choose a vice-captain (shield) — must not share the captain’s franchise."
+                : null}
         </p>
       )}
 

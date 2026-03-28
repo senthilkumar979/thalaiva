@@ -11,6 +11,7 @@ export interface EntryPlayerPayload {
   tier2Players: string[];
   tier3Players: string[];
   captain: string;
+  viceCaptain: string;
 }
 
 function assertLen(ids: string[], n: number, label: string): void {
@@ -40,8 +41,17 @@ export async function validateEntrySelection(payload: EntryPlayerPayload): Promi
   const allIds = [...payload.tier1Players, ...payload.tier2Players, ...payload.tier3Players];
   if (new Set(allIds).size !== 15) throw new Error("A player can only appear once across tiers");
   if (!allIds.includes(payload.captain)) throw new Error("Captain must be one of the 15 players");
-  const allPlayers = await Player.find({ _id: { $in: allIds } }).select("role").lean();
+  if (!allIds.includes(payload.viceCaptain)) throw new Error("Vice-captain must be one of the 15 players");
+  if (payload.captain === payload.viceCaptain) {
+    throw new Error("Captain and vice-captain must be different players");
+  }
+  const allPlayers = await Player.find({ _id: { $in: allIds } }).select("role franchise").lean();
   if (allPlayers.length !== 15) throw new Error("Invalid player selection");
+  const capFr = allPlayers.find((p) => String(p._id) === payload.captain)?.franchise;
+  const viceFr = allPlayers.find((p) => String(p._id) === payload.viceCaptain)?.franchise;
+  if (String(capFr) === String(viceFr)) {
+    throw new Error("Captain and vice-captain must be from different franchises");
+  }
   const counts = countRolesFromPlayerDocs(allPlayers);
   if (!squadCompositionSatisfied(counts)) {
     const detail = squadCompositionMessages(counts).join(" ");

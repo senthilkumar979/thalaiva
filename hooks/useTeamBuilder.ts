@@ -5,7 +5,7 @@ import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 
 export type TierKey = 1 | 3 | 5;
 
-function franchiseKey(p: PlayerWithFranchise): string {
+export function playerFranchiseKey(p: PlayerWithFranchise): string {
   if (p.franchise && typeof p.franchise === "object") return p.franchise.shortCode;
   return String(p.franchise);
 }
@@ -17,6 +17,7 @@ export function useTeamBuilder() {
   const [tier2, setTier2] = useState<string[]>([]);
   const [tier3, setTier3] = useState<string[]>([]);
   const [captain, setCaptain] = useState<string | null>(null);
+  const [viceCaptain, setViceCaptain] = useState<string | null>(null);
 
   const allSelected = useMemo(
     () => [...tier1, ...tier2, ...tier3],
@@ -37,14 +38,15 @@ export function useTeamBuilder() {
       if (current.includes(pid)) {
         set(current.filter((x) => x !== pid));
         setCaptain((c) => (c === pid ? null : c));
+        setViceCaptain((v) => (v === pid ? null : v));
         return;
       }
       if (current.length >= LIMIT) return;
-      const key = franchiseKey(player);
+      const key = playerFranchiseKey(player);
       const usedKeys = new Set(
         current.map((id) => {
           const pl = pool.find((x) => x._id === id);
-          return pl ? franchiseKey(pl) : "";
+          return pl ? playerFranchiseKey(pl) : "";
         })
       );
       if (usedKeys.has(key)) return;
@@ -58,8 +60,10 @@ export function useTeamBuilder() {
     tier2,
     tier3,
     captain,
+    viceCaptain,
     allSelected,
     setCaptain,
+    setViceCaptain,
     setTiers,
     toggle,
   };

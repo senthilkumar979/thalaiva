@@ -6,6 +6,7 @@ export interface MatchScorePlayerRow {
   name: string;
   role: string;
   franchiseShortCode: string;
+  franchiseLogoUrl?: string;
   side: "a" | "b";
   Batting: IBattingStats;
   Bowling: IBowlingStats;

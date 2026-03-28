@@ -122,8 +122,8 @@ export default function EnterCompetitionPage() {
             Build your fantasy squad
           </h1>
           <p className="max-w-2xl text-[15px] leading-relaxed text-white/65 sm:text-base">
-            Fifteen picks across three tiers, role rules that mirror real cricket balance, then name your
-            captain for double points.
+            Fifteen picks across three tiers, role rules that mirror real cricket balance, then choose your
+            captain (×2) and vice-captain (×1.5) from different franchises.
           </p>
         </div>
       </header>

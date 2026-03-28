@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, X } from "lucide-react";
+import { Crown, Shield, X } from "lucide-react";
 import { FranchiseMark } from "@/components/FranchiseMark";
 import { RoleBadge } from "@/components/RoleBadge";
 import { RoleIcon } from "@/components/RoleIcon";
@@ -84,17 +84,28 @@ interface PickRowProps {
   player: PlayerWithFranchise;
   showCaptain: boolean;
   isCaptain: boolean;
+  isViceCaptain: boolean;
   onCaptain: () => void;
+  onViceCaptain: () => void;
   onRemove: () => void;
 }
 
-export function PickRow({ player, showCaptain, isCaptain, onCaptain, onRemove }: PickRowProps) {
+export function PickRow({
+  player,
+  showCaptain,
+  isCaptain,
+  isViceCaptain,
+  onCaptain,
+  onViceCaptain,
+  onRemove,
+}: PickRowProps) {
   const fr = player.franchise && typeof player.franchise === "object" ? player.franchise : null;
   return (
     <div
       className={cn(
         "group flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-2 backdrop-blur-sm transition-colors",
-        isCaptain && "border-amber-300/50 bg-amber-500/10 ring-1 ring-amber-400/30"
+        isCaptain && "border-amber-300/50 bg-amber-500/10 ring-1 ring-amber-400/30",
+        !isCaptain && isViceCaptain && "border-sky-400/40 bg-sky-500/10 ring-1 ring-sky-400/25"
       )}
     >
       {fr && (
@@ -113,6 +124,11 @@ export function PickRow({ player, showCaptain, isCaptain, onCaptain, onRemove }:
               Captain
             </span>
           )}
+          {!isCaptain && isViceCaptain && (
+            <span className="shrink-0 rounded-md bg-sky-400/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-sky-100 ring-1 ring-sky-400/40">
+              Vice
+            </span>
+          )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <RoleBadge role={player.role} tone="enter" variant="short" />
@@ -124,19 +140,34 @@ export function PickRow({ player, showCaptain, isCaptain, onCaptain, onRemove }:
         </div>
       </div>
       {showCaptain && (
-        <button
-          type="button"
-          onClick={onCaptain}
-          title="Set captain"
-          className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors",
-            isCaptain
-              ? "border-amber-400/60 bg-amber-500/20 text-amber-200"
-              : "border-white/15 text-white/40 hover:border-white/30 hover:text-white/80"
-          )}
-        >
-          <Crown className="size-4" />
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={onCaptain}
+            title="Set captain (×2)"
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors",
+              isCaptain
+                ? "border-amber-400/60 bg-amber-500/20 text-amber-200"
+                : "border-white/15 text-white/40 hover:border-white/30 hover:text-white/80"
+            )}
+          >
+            <Crown className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onViceCaptain}
+            title="Set vice-captain (×1.5) — different franchise than captain"
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors",
+              isViceCaptain
+                ? "border-sky-400/60 bg-sky-500/20 text-sky-100"
+                : "border-white/15 text-white/40 hover:border-white/30 hover:text-white/80"
+            )}
+          >
+            <Shield className="size-4" />
+          </button>
+        </>
       )}
       <button
         type="button"

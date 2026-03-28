@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EnterPlayerPool } from "@/components/EnterPlayerPool";
 import { EnterSquadSidebar } from "@/components/EnterSquadSidebar";
 import { EnterTeamNameField } from "@/components/EnterTeamNameField";
 import type { FranchiseOption } from "@/lib/franchiseTypes";
+import { filterPlayersByFranchise, filterPlayersByRole } from "@/lib/teamPlayerFilters";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import { usePlayersByTier } from "@/hooks/usePlayersByTier";
+import { useCaptainViceSelection } from "@/hooks/useCaptainViceSelection";
 import { useHydrateTeamFromEntry } from "@/hooks/useHydrateTeamFromEntry";
 import type { TierKey } from "@/hooks/useTeamBuilder";
 import { useTeamBuilder } from "@/hooks/useTeamBuilder";
@@ -29,19 +31,6 @@ interface TeamBuilderProps {
   afterSaveRedirectTo?: string;
 }
 
-function filterByFranchise(players: PlayerWithFranchise[], team: string): PlayerWithFranchise[] {
-  if (team === "all") return players;
-  return players.filter((p) => {
-    if (p.franchise && typeof p.franchise === "object") return p.franchise.shortCode === team;
-    return false;
-  });
-}
-
-function filterByRole(players: PlayerWithFranchise[], role: RoleFilterValue): PlayerWithFranchise[] {
-  if (role === "all") return players;
-  return players.filter((p) => p.role === role);
-}
-
 export const TeamBuilder = ({
   competitionId,
   entriesClosed,
@@ -54,7 +43,7 @@ export const TeamBuilder = ({
   const p3 = usePlayersByTier(5);
   const tb = useTeamBuilder();
   const [teamName, setTeamName] = useState("");
-  useHydrateTeamFromEntry(competitionId, tb.setTiers, tb.setCaptain, setTeamName);
+  useHydrateTeamFromEntry(competitionId, tb.setTiers, tb.setCaptain, tb.setViceCaptain, setTeamName);
   const [teamFilter, setTeamFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("all");
 
@@ -79,15 +68,15 @@ export const TeamBuilder = ({
   }, [p1.players, p2.players, p3.players]);
 
   const f1 = useMemo(
-    () => filterByRole(filterByFranchise(p1.players, teamFilter), roleFilter),
+    () => filterPlayersByRole(filterPlayersByFranchise(p1.players, teamFilter), roleFilter),
     [p1.players, teamFilter, roleFilter]
   );
   const f2 = useMemo(
-    () => filterByRole(filterByFranchise(p2.players, teamFilter), roleFilter),
+    () => filterPlayersByRole(filterPlayersByFranchise(p2.players, teamFilter), roleFilter),
     [p2.players, teamFilter, roleFilter]
   );
   const f3 = useMemo(
-    () => filterByRole(filterByFranchise(p3.players, teamFilter), roleFilter),
+    () => filterPlayersByRole(filterPlayersByFranchise(p3.players, teamFilter), roleFilter),
     [p3.players, teamFilter, roleFilter]
   );
 
@@ -103,17 +92,25 @@ export const TeamBuilder = ({
     [allIds.length, compositionCounts]
   );
 
+  const { onCaptain, onViceCaptain, captainViceFranchisesOk } = useCaptainViceSelection({
+    playerById,
+    captain: tb.captain,
+    viceCaptain: tb.viceCaptain,
+    setCaptain: tb.setCaptain,
+    setViceCaptain: tb.setViceCaptain,
+    capPool: allIds,
+  });
+
   const canSubmit =
     !entriesClosed &&
     compositionOk &&
     teamName.trim().length > 0 &&
     !!tb.captain &&
-    allIds.includes(tb.captain);
-
-  const { captain: capId, allSelected: capPool, setCaptain: setCap } = tb;
-  useEffect(() => {
-    if (capId && !capPool.includes(capId)) setCap(null);
-  }, [capId, capPool, setCap]);
+    allIds.includes(tb.captain) &&
+    !!tb.viceCaptain &&
+    allIds.includes(tb.viceCaptain) &&
+    tb.captain !== tb.viceCaptain &&
+    captainViceFranchisesOk;
 
   const handleTierToggle = useCallback(
     (tier: TierKey, player: PlayerWithFranchise, pool: PlayerWithFranchise[]) => {
@@ -138,12 +135,16 @@ export const TeamBuilder = ({
       toast.error(squadCompositionMessages(compositionCounts).join(" ") || "Invalid squad composition");
       return;
     }
-    if (!teamName.trim() || !tb.captain) {
-      toast.error("Enter a squad name and choose a captain (tap the crown on a player).");
+    if (!teamName.trim() || !tb.captain || !tb.viceCaptain) {
+      toast.error("Enter a squad name, captain (crown), and vice-captain (shield).");
       return;
     }
-    if (!allIds.includes(tb.captain)) {
-      toast.error("Captain must be one of your 15 players.");
+    if (!allIds.includes(tb.captain) || !allIds.includes(tb.viceCaptain)) {
+      toast.error("Captain and vice-captain must be among your 15 players.");
+      return;
+    }
+    if (tb.captain === tb.viceCaptain) {
+      toast.error("Captain and vice-captain must be different players.");
       return;
     }
     const res = await fetch(`/api/competitions/${competitionId}/entries`, {
@@ -155,6 +156,7 @@ export const TeamBuilder = ({
         tier2Players: tb.tier2,
         tier3Players: tb.tier3,
         captain: tb.captain,
+        viceCaptain: tb.viceCaptain,
       }),
     });
     if (!res.ok) {
@@ -194,7 +196,9 @@ export const TeamBuilder = ({
         tier3Ids={tb.tier3}
         playerById={playerById}
         captain={tb.captain}
-        onCaptain={tb.setCaptain}
+        viceCaptain={tb.viceCaptain}
+        onCaptain={onCaptain}
+        onViceCaptain={onViceCaptain}
         onRemove={removePlayer}
         onSubmit={submit}
         compositionCounts={compositionCounts}

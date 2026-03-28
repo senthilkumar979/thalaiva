@@ -3,6 +3,7 @@ import mongoose, { Schema, type Model, type Types } from "mongoose";
 export interface IPlayerPointsRow {
   player: Types.ObjectId;
   isCaptain: boolean;
+  isViceCaptain: boolean;
   rawPoints: number;
   captainMultiplied: number;
 }
@@ -25,6 +26,7 @@ const PlayerPointsRowSchema = new Schema<IPlayerPointsRow>(
   {
     player: { type: Schema.Types.ObjectId, ref: "Player", required: true },
     isCaptain: { type: Boolean, required: true },
+    isViceCaptain: { type: Boolean, required: true, default: false },
     rawPoints: { type: Number, required: true },
     captainMultiplied: { type: Number, required: true },
   },

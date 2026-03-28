@@ -7,6 +7,7 @@ export function useHydrateTeamFromEntry(
   competitionId: string,
   setTiers: (t1: string[], t2: string[], t3: string[]) => void,
   setCaptain: (id: string | null) => void,
+  setViceCaptain: (id: string | null) => void,
   setTeamName: (v: string) => void
 ) {
   useEffect(() => {
@@ -21,11 +22,12 @@ export function useHydrateTeamFromEntry(
           playerIdListFromEntry(e.tier3Players)
         );
         setCaptain(captainIdFromEntry(e.captain));
+        setViceCaptain(captainIdFromEntry(e.viceCaptain));
         setTeamName(e.customTeamName);
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [competitionId, setTiers, setCaptain, setTeamName]);
+  }, [competitionId, setTiers, setCaptain, setViceCaptain, setTeamName]);
 }

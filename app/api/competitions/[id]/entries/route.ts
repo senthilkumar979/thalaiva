@@ -13,6 +13,7 @@ const entrySchema = z.object({
   tier2Players: z.array(z.string()).length(5),
   tier3Players: z.array(z.string()).length(5),
   captain: z.string().min(1),
+  viceCaptain: z.string().min(1),
 });
 
 interface RouteParams {
@@ -49,6 +50,7 @@ export async function POST(req: Request, { params }: RouteParams) {
       tier2Players: parsed.data.tier2Players.map((x) => new mongoose.Types.ObjectId(x)),
       tier3Players: parsed.data.tier3Players.map((x) => new mongoose.Types.ObjectId(x)),
       captain: new mongoose.Types.ObjectId(parsed.data.captain),
+      viceCaptain: new mongoose.Types.ObjectId(parsed.data.viceCaptain),
       totalScore: 0,
     };
     let entry = await Entry.findOne({ competition: id, user: session.user.id });

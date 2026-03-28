@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import {
@@ -57,6 +57,14 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
   const compName = data?.competition.name ?? "League";
   const drawerPlayer = drawer?.row;
 
+  const xiMatchBlocks = useMemo(() => {
+    if (!data?.matches.length) return [];
+    return data.matches.map((block) => ({
+      ...block,
+      players: block.players.filter((p) => p.participated),
+    }));
+  }, [data]);
+
   if (loading) {
     return (
       <CompetitionSubpageShell>
@@ -99,8 +107,8 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Scores by match</h1>
               <p className="max-w-2xl text-sm leading-relaxed text-white/65">
-                First team in the fixture on the left, second on the right. Open a match, then tap a player for
-                section totals and a full fantasy breakdown.
+                Playing XI only. First team in the fixture on the left, second on the right. Open a match, then
+                tap a player for section totals and a full fantasy breakdown.
               </p>
             </div>
           </header>
@@ -111,7 +119,7 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
             </p>
           ) : (
             <CompetitionMatchScoresAccordion
-              blocks={data.matches}
+              blocks={xiMatchBlocks}
               onPlayer={(row, matchTitle, franchise) => setDrawer({ row, matchTitle, franchise })}
             />
           )}

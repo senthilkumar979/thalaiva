@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface Row {
   player: { _id: string; name: string; franchise?: { shortCode?: string } };
   isCaptain: boolean;
+  isViceCaptain?: boolean;
   rawPoints: number;
   captainMultiplied: number;
 }
@@ -139,6 +140,11 @@ export default function MyMatchDetailPage() {
                   {r.isCaptain && (
                     <Badge className="ml-2" variant="secondary">
                       Captain ×2
+                    </Badge>
+                  )}
+                  {!r.isCaptain && r.isViceCaptain && (
+                    <Badge className="ml-2 border-sky-400/40 bg-sky-500/15" variant="secondary">
+                      Vice ×1.5
                     </Badge>
                   )}
                 </CardTitle>

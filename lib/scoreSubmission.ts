@@ -12,6 +12,7 @@ import {
   type IBowlingStats,
   type IFieldingStats,
 } from "@/models/PlayerMatchScore";
+import { FANTASY_SCORING_POINT_VALUES as P } from "@/lib/updatedScoring";
 
 export interface PlayerStatInput {
   playerId: string;
@@ -51,6 +52,7 @@ async function scoreEntriesForCompetition(
     playersWithPoints: {
       player: Types.ObjectId;
       isCaptain: boolean;
+      isViceCaptain: boolean;
       rawPoints: number;
       captainMultiplied: number;
     }[];
@@ -67,10 +69,15 @@ async function scoreEntriesForCompetition(
       const raw = matchScoresByPlayer.get(key) ?? 0;
       if (raw === 0) continue;
       const isCaptain = String(e.captain) === key;
-      const captainMultiplied = isCaptain ? raw * 2 : raw;
+      const isViceCaptain = Boolean(e.viceCaptain && String(e.viceCaptain) === key);
+      let mult = 1;
+      if (isCaptain) mult = P.CAPTAIN_MULTIPLIER;
+      else if (isViceCaptain) mult = P.VICE_CAPTAIN_MULTIPLIER;
+      const captainMultiplied = raw * mult;
       playersWithPoints.push({
         player: pid,
         isCaptain,
+        isViceCaptain,
         rawPoints: raw,
         captainMultiplied,
       });
