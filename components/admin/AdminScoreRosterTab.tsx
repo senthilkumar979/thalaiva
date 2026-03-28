@@ -14,19 +14,19 @@ export interface ScorePlayerLite {
 }
 
 interface AdminScoreRosterTabProps {
+  matchId: string;
   list: ScorePlayerLite[];
   rows: Record<string, StatFormValues>;
   participation: Record<string, boolean>;
-  pointsByPlayer: Record<string, number>;
   update: (id: string, next: StatFormValues) => void;
   setParticipation: Dispatch<SetStateAction<Record<string, boolean>>>;
 }
 
 export const AdminScoreRosterTab = ({
+  matchId,
   list,
   rows,
   participation,
-  pointsByPlayer,
   update,
   setParticipation,
 }: AdminScoreRosterTabProps) => {
@@ -46,12 +46,12 @@ export const AdminScoreRosterTab = ({
         return (
           <AdminScorePlayerAccordion
             key={p._id}
+            matchId={matchId}
             name={p.name}
             franchiseLabel={franchiseLabel}
             franchiseLogoUrl={p.franchise.logoUrl}
             franchiseShortCode={franchiseShortCode}
             role={p.role}
-            points={pointsByPlayer[p._id] ?? 0}
             participated={participation[p._id] ?? false}
             onParticipationChange={(v) => setParticipation((prev) => ({ ...prev, [p._id]: v }))}
             value={row}

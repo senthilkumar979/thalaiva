@@ -22,11 +22,13 @@ const statSchema = z.object({
     maidenOvers: z.number().min(0),
     runsConceded: z.number().min(0),
     dotBalls: z.number().min(0),
+    hasHattrick: z.boolean(),
   }),
   Fielding: z.object({
     catches: z.number().min(0),
     stumpings: z.number().min(0),
     runOuts: z.number().min(0),
+    assistedRunOuts: z.number().min(0),
   }),
 });
 

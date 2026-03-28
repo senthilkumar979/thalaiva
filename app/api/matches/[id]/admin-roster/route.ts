@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 import { Match } from "@/models/Match";
 import { Player } from "@/models/Player";
+import { PlayerMatchScore } from "@/models/PlayerMatchScore";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,7 +26,8 @@ export async function GET(_req: Request, { params }: RouteParams) {
       .populate("franchise", "name shortCode logoUrl")
       .sort({ name: 1 })
       .lean();
-    return NextResponse.json({ match: m, players });
+    const playerScores = await PlayerMatchScore.find({ match: id }).lean();
+    return NextResponse.json({ match: m, players, playerScores });
   } catch (e) {
     const err = e as Error & { status?: number };
     if (err.status) return NextResponse.json({ error: err.message }, { status: err.status });

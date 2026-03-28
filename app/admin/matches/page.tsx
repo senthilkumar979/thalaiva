@@ -14,6 +14,7 @@ interface Franchise {
   _id: string;
   name: string;
   shortCode: string;
+  logoUrl?: string;
 }
 
 export default function AdminMatchesPage() {

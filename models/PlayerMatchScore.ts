@@ -14,12 +14,16 @@ export interface IBowlingStats {
   maidenOvers: number;
   runsConceded: number;
   dotBalls: number;
+  /** Admin-flagged hat-trick (see scoring rules). */
+  hasHattrick: boolean;
 }
 
 export interface IFieldingStats {
   catches: number;
   stumpings: number;
   runOuts: number;
+  /** Shared-credit run-out assists. */
+  assistedRunOuts: number;
 }
 
 export interface IPlayerMatchScore {
@@ -55,6 +59,7 @@ const BowlingSchema = new Schema<IBowlingStats>(
     maidenOvers: { type: Number, default: 0 },
     runsConceded: { type: Number, default: 0 },
     dotBalls: { type: Number, default: 0 },
+    hasHattrick: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -64,6 +69,7 @@ const FieldingSchema = new Schema<IFieldingStats>(
     catches: { type: Number, default: 0 },
     stumpings: { type: Number, default: 0 },
     runOuts: { type: Number, default: 0 },
+    assistedRunOuts: { type: Number, default: 0 },
   },
   { _id: false }
 );

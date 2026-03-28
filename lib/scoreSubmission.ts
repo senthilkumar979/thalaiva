@@ -1,6 +1,6 @@
 import mongoose, { type ClientSession, type Types } from "mongoose";
+import { adminStatInputToFantasyPoints } from "@/lib/adminScoreToUpdatedStats";
 import { connectDb } from "@/lib/db";
-import { playerMatchFantasyPoints } from "@/lib/scoring";
 import { Competition } from "@/models/Competition";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
 import { Entry, type IEntry } from "@/models/Entry";
@@ -110,6 +110,28 @@ async function scoreEntriesForCompetition(
   }
 }
 
+async function rollBackMatchScoring(matchId: string, session: ClientSession): Promise<void> {
+  const mid = new mongoose.Types.ObjectId(matchId);
+  const pms = await PlayerMatchScore.find({ match: mid }).session(session).lean();
+  for (const row of pms) {
+    await Player.updateOne(
+      { _id: row.player },
+      { $inc: { totalFantasyPoints: -row.fantasyPoints } },
+      { session }
+    );
+  }
+  const cms = await CompetitionMatchScore.find({ match: mid }).session(session).lean();
+  for (const row of cms) {
+    await Entry.updateOne(
+      { _id: row.entry },
+      { $inc: { totalScore: -row.totalPointsThisMatch } },
+      { session }
+    );
+  }
+  await CompetitionMatchScore.deleteMany({ match: mid }).session(session);
+  await PlayerMatchScore.deleteMany({ match: mid }).session(session);
+}
+
 export async function submitMatchScores(matchId: string, stats: PlayerStatInput[]): Promise<void> {
   await connectDb();
   const session = await mongoose.startSession();
@@ -117,17 +139,10 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
   try {
     const match = await Match.findById(matchId).session(session);
     if (!match) throw new Error("Match not found");
-    if (match.isScored) throw new Error("Match already scored");
+    if (match.isScored) await rollBackMatchScoring(matchId, session);
 
     for (const s of stats) {
-      const pts = playerMatchFantasyPoints(
-        {
-          Batting: s.Batting,
-          Bowling: s.Bowling,
-          Fielding: s.Fielding,
-        },
-        s.participated
-      );
+      const pts = adminStatInputToFantasyPoints(matchId, s);
       await PlayerMatchScore.findOneAndUpdate(
         { player: s.playerId, match: matchId },
         {

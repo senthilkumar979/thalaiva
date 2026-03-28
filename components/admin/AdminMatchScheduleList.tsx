@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight, Calendar, MapPin, Pencil } from "lucide-react";
+import { ArrowUpRight, Calendar, Home, MapPin, Pencil, Plane } from "lucide-react";
+import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
 import { Button } from "@/components/ui/button";
 import { formatVenueLabel } from "@/lib/matchVenue";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ interface Franchise {
   _id: string;
   name: string;
   shortCode: string;
+  logoUrl?: string;
 }
 
 export interface AdminMatchRow {
@@ -76,10 +78,38 @@ export const AdminMatchScheduleList = ({ matches, onEdit }: AdminMatchScheduleLi
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base font-semibold tracking-tight sm:text-lg">
-                  <span className="text-foreground">{m.franchiseA?.shortCode}</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base font-semibold tracking-tight sm:text-lg">
+                  <span className="inline-flex items-center gap-2 text-foreground">
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                      title="Home"
+                    >
+                      <Home className="size-3.5 shrink-0 opacity-70" aria-hidden />
+                      Home
+                    </span>
+                    <AdminScoreTeamLogo
+                      logoUrl={m.franchiseA?.logoUrl}
+                      shortCode={m.franchiseA?.shortCode ?? "—"}
+                      size="sm"
+                    />
+                    <span>{m.franchiseA?.shortCode}</span>
+                  </span>
                   <span className="text-xs font-normal text-muted-foreground">vs</span>
-                  <span className="text-foreground">{m.franchiseB?.shortCode}</span>
+                  <span className="inline-flex items-center gap-2 text-foreground">
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                      title="Away"
+                    >
+                      <Plane className="size-3.5 shrink-0 opacity-70" aria-hidden />
+                      Away
+                    </span>
+                    <AdminScoreTeamLogo
+                      logoUrl={m.franchiseB?.logoUrl}
+                      shortCode={m.franchiseB?.shortCode ?? "—"}
+                      size="sm"
+                    />
+                    <span>{m.franchiseB?.shortCode}</span>
+                  </span>
                 </div>
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
@@ -95,7 +125,7 @@ export const AdminMatchScheduleList = ({ matches, onEdit }: AdminMatchScheduleLi
               </div>
 
               <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-                {!m.isScored && onEdit ? (
+                {onEdit ? (
                   <Button
                     type="button"
                     variant="outline"
