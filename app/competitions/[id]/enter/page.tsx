@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { TeamBuilder } from "@/components/TeamBuilder";
+import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
 
 interface Competition {
   name: string;
@@ -37,7 +38,10 @@ export default function EnterCompetitionPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((e) => {
         if (e?.customTeamName) {
-          router.replace(`/competitions/${id}/my-team?edit=1`);
+          const closed = areCompetitionEntriesClosed(comp.entriesFrozen, comp.entryDeadline);
+          router.replace(
+            closed ? `/competitions/${id}/my-team` : `/competitions/${id}/my-team?edit=1`
+          );
           setEntryGate("redirect");
         } else setEntryGate("ok");
       })
@@ -93,7 +97,7 @@ export default function EnterCompetitionPage() {
 
   const deadlinePassed = new Date() > new Date(comp.entryDeadline);
   const frozen = comp.entriesFrozen === true;
-  const entriesClosed = deadlinePassed || frozen;
+  const entriesClosed = areCompetitionEntriesClosed(comp.entriesFrozen, comp.entryDeadline);
 
   return shell(
     <div className="space-y-10">

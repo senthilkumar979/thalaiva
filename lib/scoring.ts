@@ -117,3 +117,89 @@ export function getPlayerMatchFantasyPointsBreakdown(
     breakdown: [...breakdown, { label: "Match participation", points: MATCH_PARTICIPATION_POINTS }],
   };
 }
+
+/** Fantasy points attributed to batting / bowling / fielding (excludes match participation bonus). */
+export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
+  batting: number;
+  bowling: number;
+  fielding: number;
+} {
+  const b = stats.Batting;
+  const bw = stats.Bowling;
+  const f = stats.Fielding;
+  let batting = 0;
+  batting += b.runs * 1;
+  batting += b.fours * 4;
+  batting += b.sixes * 6;
+  if (b.runs >= 100) {
+    batting += 40;
+    batting += 20;
+  } else if (b.runs >= 50) {
+    batting += 20;
+  }
+  if (b.isOut && b.runs === 0) batting -= 5;
+  if (b.ballsFaced >= 10) {
+    const sr = (b.runs / b.ballsFaced) * 100;
+    if (sr > 150) batting += 6;
+    else if (sr >= 130) batting += 4;
+  }
+  let bowling = 0;
+  bowling += bw.wickets * 25;
+  bowling += bw.maidenOvers * 10;
+  bowling += bw.dotBalls * 4;
+  if (bw.wickets >= 5) bowling += 20;
+  else if (bw.wickets >= 3) bowling += 10;
+  const oversDec = cricketOversToDecimal(bw.oversBowled);
+  if (oversDec >= 2 && oversDec > 0) {
+    const economy = bw.runsConceded / oversDec;
+    if (economy < 5) bowling += 10;
+    else if (economy <= 6) bowling += 6;
+  }
+  const fielding = f.catches * 10 + f.stumpings * 15 + f.runOuts * 10;
+  return { batting, bowling, fielding };
+}
+
+const BATTING_BREAKDOWN_LABELS = new Set([
+  "Runs",
+  "Fours",
+  "Sixes",
+  "100-run milestone",
+  "50-run milestone",
+  "Duck",
+  "Strike rate bonus (>150)",
+  "Strike rate bonus (130–150)",
+]);
+
+const BOWLING_BREAKDOWN_LABELS = new Set([
+  "Wickets",
+  "Maiden overs",
+  "Dot balls",
+  "5-wicket haul",
+  "3-wicket haul",
+  "Economy bonus (<5)",
+  "Economy bonus (5–6)",
+]);
+
+const FIELDING_BREAKDOWN_LABELS = new Set(["Catches", "Stumpings", "Run-outs"]);
+
+export function groupBreakdownBySection(breakdown: FantasyPointsBreakdown[]): {
+  batting: FantasyPointsBreakdown[];
+  bowling: FantasyPointsBreakdown[];
+  fielding: FantasyPointsBreakdown[];
+  participation: FantasyPointsBreakdown[];
+} {
+  const batting: FantasyPointsBreakdown[] = [];
+  const bowling: FantasyPointsBreakdown[] = [];
+  const fielding: FantasyPointsBreakdown[] = [];
+  const participation: FantasyPointsBreakdown[] = [];
+  for (const row of breakdown) {
+    if (row.label === "Match participation") {
+      participation.push(row);
+      continue;
+    }
+    if (BATTING_BREAKDOWN_LABELS.has(row.label)) batting.push(row);
+    else if (BOWLING_BREAKDOWN_LABELS.has(row.label)) bowling.push(row);
+    else if (FIELDING_BREAKDOWN_LABELS.has(row.label)) fielding.push(row);
+  }
+  return { batting, bowling, fielding, participation };
+}

@@ -1,166 +1,143 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
+import { CompetitionMyTeamStrip } from "@/components/competitions/CompetitionMyTeamStrip";
+import { CompetitionSubpageShell } from "@/components/competitions/CompetitionSubpageShell";
+import { MyTeamMatchLogSection } from "@/components/competitions/MyTeamMatchLogSection";
 import { TeamBuilder } from "@/components/TeamBuilder";
-import { MatchRow } from "@/components/MatchRow";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useCompetitionName } from "@/hooks/useCompetitionName";
-import { formatVenueLabel } from "@/lib/matchVenue";
-import { cn } from "@/lib/utils";
-
-interface MatchRowData {
-  match: {
-    _id: string;
-    matchNumber: number;
-    date: string;
-    venue: string;
-  };
-  totalPointsThisMatch: number;
-  rankThisMatch: number;
-  cumulative: number;
-}
-
-interface CompetitionLite {
-  entryDeadline: string;
-  entriesFrozen?: boolean;
-}
-
-const THEME_BG = "#19398a";
+import { Button } from "@/components/ui/button";
+import { useMyTeamPageData } from "@/hooks/useMyTeamPageData";
+import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
 
 export default function MyTeamMatchesPage() {
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const id = String(params.id);
   const editParam = searchParams.get("edit") === "1";
-  const { status } = useSession();
-  const compName = useCompetitionName(id);
-  const [rows, setRows] = useState<MatchRowData[]>([]);
-  const [comp, setComp] = useState<CompetitionLite | null>(null);
-  const [myEntry, setMyEntry] = useState<{ customTeamName?: string } | null>(null);
-  const [ready, setReady] = useState(false);
+  const { rows, comp, myEntry, myRank, ready, loadError, status } = useMyTeamPageData(id);
+
+  const entriesClosed =
+    comp != null ? areCompetitionEntriesClosed(comp.entriesFrozen, comp.entryDeadline) : false;
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      setReady(true);
-      return;
-    }
-    if (status !== "authenticated") return;
-    let cancelled = false;
-    Promise.all([
-      fetch(`/api/competitions/${id}`).then((r) => r.json()),
-      fetch(`/api/competitions/${id}/entries/me`).then((r) => (r.ok ? r.json() : null)),
-    ])
-      .then(([c, e]) => {
-        if (cancelled) return;
-        setComp(c as CompetitionLite);
-        setMyEntry(e);
-        setReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) setReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, status]);
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    fetch(`/api/competitions/${id}/entries/me/matches`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setRows(data);
-      })
-      .catch(() => undefined);
-  }, [id, status]);
+    if (!editParam || !entriesClosed) return;
+    router.replace(`/competitions/${id}/my-team`);
+  }, [editParam, entriesClosed, id, router]);
 
   if (status === "loading" || (status === "authenticated" && !ready)) {
     return (
-      <div className="flex min-h-[30vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
+      <CompetitionSubpageShell>
+        <div className="flex min-h-[40vh] items-center justify-center text-white/80">
+          <Loader2 className="size-8 animate-spin" />
+        </div>
+      </CompetitionSubpageShell>
     );
   }
 
   if (status === "unauthenticated") {
-    return <p className="text-sm text-muted-foreground">Log in to view your team breakdown.</p>;
+    return (
+      <CompetitionSubpageShell>
+        <p className="py-12 text-center text-sm text-white/85">
+          Log in to view your team breakdown and match-by-match points.
+        </p>
+      </CompetitionSubpageShell>
+    );
   }
 
-  const entriesClosed =
-    !comp ||
-    comp.entriesFrozen === true ||
-    new Date() > new Date(comp.entryDeadline);
-  const entriesOpen = Boolean(comp && !entriesClosed);
+  if (loadError || !comp) {
+    return (
+      <CompetitionSubpageShell>
+        <p className="py-12 text-center text-sm text-white/80">Competition not found.</p>
+      </CompetitionSubpageShell>
+    );
+  }
+
+  const entriesOpen = !entriesClosed;
   const hasTeam = Boolean(myEntry?.customTeamName);
   const showSquadEditor = editParam && entriesOpen && hasTeam;
-
-  const squadShell = (children: React.ReactNode) => (
-    <div
-      className="relative overflow-hidden rounded-2xl border border-white/10 px-2 py-8 text-white shadow-2xl sm:px-8 sm:py-10"
-      style={{ backgroundColor: THEME_BG }}
-    >
-      <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full bg-[#0c1f5c]/80 blur-3xl" />
-      <div className="relative mx-auto max-w-10xl">{children}</div>
-    </div>
-  );
+  const compLabel = comp.name ?? "League";
 
   return (
-    <div className="space-y-6">
-      <CompetitionBreadcrumb
-        variant="light"
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Competitions", href: "/competitions" },
-          { label: compName ?? "League", href: `/competitions/${id}` },
-          { label: "My team" },
-        ]}
-      />
+    <CompetitionSubpageShell>
+      <div className="space-y-8">
+        <CompetitionBreadcrumb
+          variant="dark"
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Competitions", href: "/competitions" },
+            { label: compLabel, href: `/competitions/${id}` },
+            { label: "My team" },
+          ]}
+        />
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">My team — matches</h1>
-          <p className="text-muted-foreground">Points and ranks update after each scored match.</p>
-        </div>
-        {entriesOpen && hasTeam && (
-          <Link
-            href={editParam ? `/competitions/${id}/my-team` : `/competitions/${id}/my-team?edit=1`}
-            className={cn(buttonVariants({ variant: editParam ? "secondary" : "default" }))}
-          >
-            {editParam ? "Done editing" : "Edit squad"}
-          </Link>
+        <header className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="h-1 w-12 rounded-full bg-gradient-to-r from-amber-300 to-amber-500/40" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/50">
+              Your fantasy team
+            </span>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">My team & matches</h1>
+              <p className="max-w-2xl text-sm leading-relaxed text-white/65">
+                Points and ranks update after each scored match. Tap a match for player-level breakdown.
+              </p>
+            </div>
+            {entriesOpen && hasTeam && (
+              editParam ? (
+                <Link href={`/competitions/${id}/my-team`} className="inline-flex shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 rounded-xl border-white/25 bg-white/5 px-6 font-semibold text-white hover:bg-white/10"
+                  >
+                    Done editing
+                  </Button>
+                </Link>
+              ) : (
+                <Link href={`/competitions/${id}/my-team?edit=1`} className="inline-flex shrink-0">
+                  <Button
+                    type="button"
+                    className="h-11 rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90"
+                  >
+                    Edit squad
+                  </Button>
+                </Link>
+              )
+            )}
+          </div>
+        </header>
+
+        {!hasTeam && (
+          <p className="rounded-xl border border-white/15 bg-white/5 px-4 py-6 text-center text-sm text-white/80">
+            You have not submitted a team yet.{" "}
+            <Link href={`/competitions/${id}/enter`} className="font-medium text-amber-200/90 underline-offset-4 hover:underline">
+              Enter the competition
+            </Link>
+          </p>
         )}
-      </div>
 
-      {!hasTeam && (
-        <p className="text-muted-foreground">
-          You have not submitted a team yet.{" "}
-          <Link href={`/competitions/${id}/enter`} className="text-primary underline">
-            Enter the competition
-          </Link>
-        </p>
-      )}
+        {hasTeam && myEntry?.customTeamName != null && (
+          <CompetitionMyTeamStrip
+            competitionId={id}
+            teamName={myEntry.customTeamName}
+            totalScore={myEntry.totalScore ?? 0}
+            rank={myRank}
+            entriesOpen={entriesOpen}
+          />
+        )}
 
-      {editParam && hasTeam && entriesClosed && (
-        <p className="text-sm text-muted-foreground">
-          Entries are closed — your squad can no longer be edited.
-        </p>
-      )}
+        {editParam && hasTeam && entriesClosed && (
+          <p className="text-sm text-white/60">Entries are closed — your squad can no longer be edited.</p>
+        )}
 
-      {showSquadEditor &&
-        squadShell(
+        {showSquadEditor && (
           <TeamBuilder
             competitionId={id}
             entriesClosed={false}
@@ -168,29 +145,15 @@ export default function MyTeamMatchesPage() {
           />
         )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Match</TableHead>
-            <TableHead className="text-right">Pts</TableHead>
-            <TableHead className="text-right">Rank</TableHead>
-            <TableHead className="text-right">Cumulative</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((r) => (
-            <MatchRow
-              key={String(r.match._id)}
-              competitionId={id}
-              matchId={String(r.match._id)}
-              label={`#${r.match.matchNumber} — ${new Date(r.match.date).toLocaleDateString()} @ ${formatVenueLabel(r.match.venue)}`}
-              points={r.totalPointsThisMatch}
-              rank={r.rankThisMatch}
-              cumulative={r.cumulative}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        <MyTeamMatchLogSection competitionId={id} rows={rows} />
+
+        <Link
+          href={`/competitions/${id}`}
+          className="inline-block text-sm font-medium text-amber-200/90 underline-offset-4 hover:underline"
+        >
+          ← Back to competition
+        </Link>
+      </div>
+    </CompetitionSubpageShell>
   );
 }

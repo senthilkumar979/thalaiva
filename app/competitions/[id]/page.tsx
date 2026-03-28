@@ -15,6 +15,7 @@ import { CompetitionMyTeamStrip } from "@/components/competitions/CompetitionMyT
 import { CompetitionTeamPlayersDialog } from "@/components/competitions/CompetitionTeamPlayersDialog";
 import type { LeaderboardRow } from "@/components/LeaderboardTable";
 import { Button } from "@/components/ui/button";
+import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
 
 interface Competition {
   _id: string;
@@ -110,8 +111,7 @@ export default function CompetitionDetailPage() {
   if (loading) return <CompetitionDetailLoading />;
   if (loadError || !comp) return <CompetitionDetailNotFound />;
 
-  const entriesClosed =
-    comp.entriesFrozen === true || new Date() > new Date(comp.entryDeadline);
+  const entriesClosed = areCompetitionEntriesClosed(comp.entriesFrozen, comp.entryDeadline);
   const isAdmin = session?.user?.role === "admin";
   const revealAllSquads = comp.entriesFrozen === true || isAdmin;
 
@@ -221,6 +221,24 @@ export default function CompetitionDetailPage() {
               className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
             >
               {revealAllSquads ? "Submitted players" : "My squad"}
+            </Button>
+          </Link>
+          <Link href={`/competitions/${id}/scores`} className="inline-flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+            >
+              Scores by match
+            </Button>
+          </Link>
+          <Link href={`/competitions/${id}/scoring-rules`} className="inline-flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+            >
+              Scoring rules
             </Button>
           </Link>
         </div>
