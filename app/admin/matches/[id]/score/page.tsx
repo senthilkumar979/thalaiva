@@ -23,6 +23,15 @@ interface MatchDetail {
   isScored?: boolean;
   franchiseA: MatchTeam;
   franchiseB: MatchTeam;
+  playerOfMatch?: string | { _id: string };
+}
+
+function playerOfMatchIdFromMatch(m: MatchDetail | null): string | null {
+  if (!m?.playerOfMatch) return null;
+  const pom = m.playerOfMatch;
+  if (typeof pom === "string") return pom;
+  if (typeof pom === "object" && pom && "_id" in pom) return String(pom._id);
+  return null;
 }
 
 export default function AdminScorePage() {
@@ -121,6 +130,7 @@ export default function AdminScorePage() {
                 matchId={id}
                 players={players}
                 initialScores={initialScores}
+                initialPlayerOfMatchId={playerOfMatchIdFromMatch(match)}
                 matchTeams={{
                   franchiseA: match.franchiseA,
                   franchiseB: match.franchiseB,

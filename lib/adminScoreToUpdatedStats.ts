@@ -10,7 +10,8 @@ function fin(n: unknown): number {
 export function statFormToPlayerMatchStats(
   stats: StatFormValues,
   playedInXI: boolean,
-  matchId: string
+  matchId: string,
+  isPlayerOfTheMatch = false
 ): PlayerMatchStats {
   return {
     playerId: stats.playerId,
@@ -34,6 +35,7 @@ export function statFormToPlayerMatchStats(
     isCaptain: false,
     isViceCaptain: false,
     isPlayoffMatch: false,
+    isPlayerOfTheMatch: playedInXI && isPlayerOfTheMatch,
   };
 }
 
@@ -45,6 +47,7 @@ export function adminStatInputToFantasyPoints(
     Batting: IBattingStats;
     Bowling: IBowlingStats;
     Fielding: IFieldingStats;
+    isPlayerOfTheMatch?: boolean;
   }
 ): number {
   const stats: StatFormValues = {
@@ -53,5 +56,12 @@ export function adminStatInputToFantasyPoints(
     Bowling: input.Bowling,
     Fielding: input.Fielding,
   };
-  return calculateFantasyPoints(statFormToPlayerMatchStats(stats, input.participated, matchId)).finalScore;
+  return calculateFantasyPoints(
+    statFormToPlayerMatchStats(
+      stats,
+      input.participated,
+      matchId,
+      Boolean(input.isPlayerOfTheMatch)
+    )
+  ).finalScore;
 }

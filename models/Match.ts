@@ -7,6 +7,8 @@ export interface IMatch {
   date: Date;
   venue: string;
   isScored: boolean;
+  /** Official player of the match — +50 fantasy points when in playing XI. */
+  playerOfMatch?: Types.ObjectId;
 }
 
 export interface IMatchDocument extends IMatch {
@@ -21,11 +23,16 @@ const MatchSchema = new Schema<IMatch>(
     date: { type: Date, required: true },
     venue: { type: String, required: true, trim: true },
     isScored: { type: Boolean, default: false },
+    playerOfMatch: { type: Schema.Types.ObjectId, ref: "Player", required: false },
   },
   { timestamps: true }
 );
 
 MatchSchema.index({ matchNumber: 1 }, { unique: true });
+
+if (process.env.NODE_ENV !== "production" && mongoose.models.Match) {
+  delete mongoose.models.Match;
+}
 
 export const Match: Model<IMatch> =
   mongoose.models.Match ?? mongoose.model<IMatch>("Match", MatchSchema);

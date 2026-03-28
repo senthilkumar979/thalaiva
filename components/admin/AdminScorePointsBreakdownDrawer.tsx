@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { PlayerScoreIdentityBlock } from "@/components/PlayerScoreIdentityBlock";
 import { groupUpdatedBreakdownLinesBySection } from "@/lib/adminUpdatedScoreBreakdown";
-import type { PointsBreakdown } from "@/lib/updatedScoring";
+import { FANTASY_SCORING_POINT_VALUES as P, type PointsBreakdown } from "@/lib/updatedScoring";
 import { cn } from "@/lib/utils";
 
 export interface AdminScorePointsBreakdownDrawerProps {
@@ -140,7 +140,12 @@ export const AdminScorePointsBreakdownDrawer = ({
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto px-5 py-5 text-sm">
           <p className="text-xs leading-relaxed text-white/55">
-            Captain, vice-captain, and playoff multipliers apply on user entries only — not on this sheet.
+            <span className="text-white/70">Player of the match (+{P.PLAYER_OF_MATCH})</span> appears under{" "}
+            <span className="text-white/70">Bonuses &amp; awards</span> when this player is marked.{" "}
+            <span className="text-white/70">
+              Captain (×{P.CAPTAIN_MULTIPLIER}), vice-captain (×{P.VICE_CAPTAIN_MULTIPLIER})
+            </span>
+            , and playoff multipliers apply on user entries only — not on this sheet.
           </p>
 
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">By section</p>

@@ -11,9 +11,21 @@ interface CompetitionLite {
   entriesFrozen?: boolean;
 }
 
-interface MyEntry {
+/** Populated `captain` / `viceCaptain` from GET /entries/me (same shape as API populate). */
+export interface MyEntryPlayer {
+  _id: string;
+  name?: string;
+  franchise?: { shortCode?: string; name?: string; logoUrl?: string };
+  tier?: string;
+  role?: string;
+}
+
+export interface MyEntry {
   customTeamName?: string;
   totalScore?: number;
+  captain?: MyEntryPlayer | string;
+  /** Populated when set; older entries may omit vice-captain. */
+  viceCaptain?: MyEntryPlayer | string | null;
 }
 
 export function useMyTeamPageData(competitionId: string) {
@@ -92,6 +104,7 @@ export function useMyTeamPageData(competitionId: string) {
       .then(async (r) => {
         const data = await r.json();
         if (cancelled) return;
+        console.log("data", data)
         if (Array.isArray(data)) setRows(data);
         else setRows([]);
       })

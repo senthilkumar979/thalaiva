@@ -40,6 +40,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
         playersWithPoints: {
           player: unknown;
           isCaptain: boolean;
+          isViceCaptain: boolean;
           rawPoints: number;
           captainMultiplied: number;
         }[];
@@ -49,7 +50,10 @@ export async function GET(_req: Request, { params }: RouteParams) {
       cmsByMatch.set(String(row.match), {
         totalPointsThisMatch: row.totalPointsThisMatch,
         rankThisMatch: row.rankThisMatch,
-        playersWithPoints: row.playersWithPoints ?? [],
+        playersWithPoints: row.playersWithPoints.map((p) => ({
+          ...p,
+          isViceCaptain: p.isViceCaptain ?? false,
+        })),
       });
     }
 

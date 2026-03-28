@@ -17,6 +17,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     const m = await Match.findById(id)
       .populate("franchiseA", "name shortCode logoUrl")
       .populate("franchiseB", "name shortCode logoUrl")
+      .populate("playerOfMatch", "name shortCode")
       .lean();
     if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const players = await Player.find({

@@ -11,7 +11,7 @@ import { calculateFantasyPoints } from "@/lib/updatedScoring";
 import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface MatchTeams {
@@ -33,11 +33,20 @@ interface AdminScoreFormProps {
   matchTeams: MatchTeams;
   /** Existing rows when reopening a scored or partially saved match */
   initialScores?: HydratedPlayerMatchScore[];
+  /** Saved match award — Mongo player id */
+  initialPlayerOfMatchId?: string | null;
 }
 
-export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: AdminScoreFormProps) => {
+export const AdminScoreForm = ({
+  matchId,
+  players,
+  matchTeams,
+  initialScores,
+  initialPlayerOfMatchId,
+}: AdminScoreFormProps) => {
   const [rows, setRows] = useState<Record<string, StatFormValues>>({});
   const [participation, setParticipation] = useState<Record<string, boolean>>({});
+  const [playerOfMatchPlayerId, setPlayerOfMatchPlayerId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -71,7 +80,8 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
     }
     setRows(map);
     setParticipation(part);
-  }, [players, initialScores]);
+    setPlayerOfMatchPlayerId(initialPlayerOfMatchId ?? null);
+  }, [players, initialScores, initialPlayerOfMatchId]);
 
   const update = (id: string, next: StatFormValues) => {
     setRows((prev) => ({ ...prev, [id]: next }));
@@ -81,13 +91,16 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
     const map: Record<string, number> = {};
     for (const p of players) {
       const row = rows[p._id] ?? emptyPlayerScoreStats(p._id);
+      const isPom =
+        Boolean(playerOfMatchPlayerId && playerOfMatchPlayerId === p._id) &&
+        Boolean(participation[p._id]);
       const raw = calculateFantasyPoints(
-        statFormToPlayerMatchStats(row, participation[p._id] ?? false, matchId)
+        statFormToPlayerMatchStats(row, participation[p._id] ?? false, matchId, isPom)
       ).finalScore;
       map[p._id] = Number.isFinite(raw) ? raw : 0;
     }
     return map;
-  }, [players, rows, participation, matchId]);
+  }, [players, rows, participation, matchId, playerOfMatchPlayerId]);
 
   const grandTotal = useMemo(
     () => players.reduce((s, p) => s + (pointsByPlayer[p._id] ?? 0), 0),
@@ -126,7 +139,25 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
     [players, matchTeams.franchiseB._id]
   );
 
+  const onPlayerOfMatchSelect = useCallback(
+    (playerId: string) => {
+      if (!(participation[playerId] ?? false)) {
+        toast.error("Only players in the playing XI can be player of the match.");
+        return;
+      }
+      setPlayerOfMatchPlayerId((prev) => (prev === playerId ? null : playerId));
+    },
+    [participation]
+  );
+
   const submit = async () => {
+    if (
+      playerOfMatchPlayerId &&
+      !(participation[playerOfMatchPlayerId] ?? false)
+    ) {
+      toast.error("Player of the match must be in the playing XI — check participation for that player.");
+      return;
+    }
     setSaving(true);
     try {
       const stats = players.map((p) => {
@@ -142,7 +173,10 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
       const res = await fetch(`/api/matches/${matchId}/score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stats }),
+        body: JSON.stringify({
+          stats,
+          playerOfMatchPlayerId: playerOfMatchPlayerId ?? null,
+        }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -169,8 +203,10 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
         </Link>
         . Milestones, strike rate, economy, and hauls are derived automatically. Flag{' '}
         <strong className="font-medium text-white font-bold  text-yellow-500">hat-tricks</strong> and count{' '}
-        <strong className="font-medium text-foreground  text-yellow-500">assisted run-outs</strong> where applicable. Captain,
-        vice-captain, and playoff multipliers apply on entries, not on this sheet.
+        <strong className="font-medium text-foreground  text-yellow-500">assisted run-outs</strong> where applicable. Use the{" "}
+        <strong className="font-medium text-yellow-500">award icon</strong> on a player row to set{" "}
+        <strong className="font-medium text-yellow-500">player of the match</strong> (+50 pts; they must be in the XI).
+        Captain, vice-captain, and playoff multipliers apply on entries, not on this sheet.
       </p>
       <AdminScoreTotalsBar grandTotal={grandTotal} teams={[teamTotals[0], teamTotals[1]]} />
 
@@ -184,6 +220,8 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
             participation={participation}
             update={update}
             setParticipation={setParticipation}
+            playerOfMatchPlayerId={playerOfMatchPlayerId}
+            onPlayerOfMatchSelect={onPlayerOfMatchSelect}
           />
         }
         awayPanel={
@@ -194,6 +232,8 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
             participation={participation}
             update={update}
             setParticipation={setParticipation}
+            playerOfMatchPlayerId={playerOfMatchPlayerId}
+            onPlayerOfMatchSelect={onPlayerOfMatchSelect}
           />
         }
       />

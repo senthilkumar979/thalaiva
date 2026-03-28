@@ -20,6 +20,8 @@ interface AdminScoreRosterTabProps {
   participation: Record<string, boolean>;
   update: (id: string, next: StatFormValues) => void;
   setParticipation: Dispatch<SetStateAction<Record<string, boolean>>>;
+  playerOfMatchPlayerId: string | null;
+  onPlayerOfMatchSelect: (playerId: string) => void;
 }
 
 export const AdminScoreRosterTab = ({
@@ -29,6 +31,8 @@ export const AdminScoreRosterTab = ({
   participation,
   update,
   setParticipation,
+  playerOfMatchPlayerId,
+  onPlayerOfMatchSelect,
 }: AdminScoreRosterTabProps) => {
   const orderedList = useMemo(() => {
     return [...list].sort((a, b) => {
@@ -65,6 +69,11 @@ export const AdminScoreRosterTab = ({
             onParticipationChange={(v) => setParticipation((prev) => ({ ...prev, [p._id]: v }))}
             value={row}
             onChange={(next) => update(p._id, next)}
+            isPlayerOfTheMatch={
+              Boolean(playerOfMatchPlayerId && playerOfMatchPlayerId === p._id) &&
+              Boolean(participation[p._id])
+            }
+            onPlayerOfMatchSelect={() => onPlayerOfMatchSelect(p._id)}
           />
         );
       })}

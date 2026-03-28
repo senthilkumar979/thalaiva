@@ -34,6 +34,8 @@ const statSchema = z.object({
 
 const bodySchema = z.object({
   stats: z.array(statSchema).min(1),
+  /** Optional; must be one of the players in `stats` and in playing XI for +50 PoM points. */
+  playerOfMatchPlayerId: z.string().nullable().optional(),
 });
 
 interface RouteParams {
@@ -54,6 +56,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
     const fa = String(match.franchiseA);
     const fb = String(match.franchiseB);
+    const statIds = new Set(parsed.data.stats.map((s) => s.playerId));
     for (const s of parsed.data.stats) {
       const p = await Player.findById(s.playerId).lean();
       if (!p) return NextResponse.json({ error: `Unknown player ${s.playerId}` }, { status: 400 });
@@ -62,7 +65,25 @@ export async function POST(req: Request, { params }: RouteParams) {
         return NextResponse.json({ error: `Player ${p.name} not in this match` }, { status: 400 });
       }
     }
-    await submitMatchScores(id, parsed.data.stats as PlayerStatInput[]);
+    const pom = parsed.data.playerOfMatchPlayerId?.trim() ?? null;
+    if (pom && !statIds.has(pom)) {
+      return NextResponse.json(
+        { error: "Player of the match must be one of the players in this score sheet" },
+        { status: 400 }
+      );
+    }
+    if (pom) {
+      const pomRow = parsed.data.stats.find((s) => s.playerId === pom);
+      if (!pomRow?.participated) {
+        return NextResponse.json(
+          { error: "Player of the match must have playing XI (participation) checked" },
+          { status: 400 }
+        );
+      }
+    }
+    await submitMatchScores(id, parsed.data.stats as PlayerStatInput[], {
+      playerOfMatchPlayerId: pom,
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     const err = e as Error & { status?: number };

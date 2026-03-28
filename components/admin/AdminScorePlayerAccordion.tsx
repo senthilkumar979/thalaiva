@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Info } from "lucide-react";
+import { Award, ChevronDown, Info } from "lucide-react";
 import { AdminScorePlayerRow, type StatFormValues } from "@/components/AdminScorePlayerRow";
 import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,8 @@ interface AdminScorePlayerAccordionProps {
   onParticipationChange: (value: boolean) => void;
   value: StatFormValues;
   onChange: (next: StatFormValues) => void;
+  isPlayerOfTheMatch: boolean;
+  onPlayerOfMatchSelect: () => void;
 }
 
 function iplRoleLabel(role: PlayerRole): string {
@@ -47,13 +49,18 @@ export const AdminScorePlayerAccordion = ({
   onParticipationChange,
   value,
   onChange,
+  isPlayerOfTheMatch,
+  onPlayerOfMatchSelect,
 }: AdminScorePlayerAccordionProps) => {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const roleIconSrc = getIplRoleIconUrl(role) ?? IPL_ROLE_ICON_SVG.bat;
 
   const breakdown = useMemo(
-    () => calculateFantasyPoints(statFormToPlayerMatchStats(value, participated, matchId)),
-    [value, participated, matchId]
+    () =>
+      calculateFantasyPoints(
+        statFormToPlayerMatchStats(value, participated, matchId, isPlayerOfTheMatch)
+      ),
+    [value, participated, matchId, isPlayerOfTheMatch]
   );
 
   const displayPoints = Number.isFinite(breakdown.finalScore) ? breakdown.finalScore : 0;
@@ -112,6 +119,34 @@ export const AdminScorePlayerAccordion = ({
                 <img src={roleIconSrc} alt="" className="size-4 shrink-0 object-contain" />
                 {iplRoleLabel(role)}
               </span>
+              <button
+                type="button"
+                className={cn(
+                  "inline-flex items-center justify-center rounded-full p-1.5 transition-colors",
+                  isPlayerOfTheMatch
+                    ? "border border-amber-400/50 bg-gradient-to-br from-amber-400/25 to-amber-600/20 text-amber-100 shadow-[0_0_12px_-2px_rgba(251,191,36,0.45)] ring-1 ring-amber-300/35"
+                    : "border border-amber-400/25 bg-transparent text-amber-200/60 hover:bg-amber-500/15 hover:text-amber-100"
+                )}
+                title={
+                  isPlayerOfTheMatch
+                    ? `Player of the match (+${FANTASY_SCORING_POINT_VALUES.PLAYER_OF_MATCH} pts) — click to clear`
+                    : `Mark player of the match (+${FANTASY_SCORING_POINT_VALUES.PLAYER_OF_MATCH} pts; must be in XI)`
+                }
+                aria-pressed={isPlayerOfTheMatch}
+                aria-label={
+                  isPlayerOfTheMatch
+                    ? `Player of the match, plus ${FANTASY_SCORING_POINT_VALUES.PLAYER_OF_MATCH} fantasy points. Click to clear.`
+                    : `Mark as player of the match for plus ${FANTASY_SCORING_POINT_VALUES.PLAYER_OF_MATCH} fantasy points`
+                }
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onPlayerOfMatchSelect();
+                }}
+              >
+                <Award className="size-4 shrink-0" strokeWidth={2.25} aria-hidden />
+              </button>
             </div>
             <div className="text-xs text-white/55">{franchiseLabel}</div>
           </div>

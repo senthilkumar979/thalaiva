@@ -139,7 +139,11 @@ async function rollBackMatchScoring(matchId: string, session: ClientSession): Pr
   await PlayerMatchScore.deleteMany({ match: mid }).session(session);
 }
 
-export async function submitMatchScores(matchId: string, stats: PlayerStatInput[]): Promise<void> {
+export async function submitMatchScores(
+  matchId: string,
+  stats: PlayerStatInput[],
+  options?: { playerOfMatchPlayerId?: string | null }
+): Promise<void> {
   await connectDb();
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -148,8 +152,13 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
     if (!match) throw new Error("Match not found");
     if (match.isScored) await rollBackMatchScoring(matchId, session);
 
+    const pomId = options?.playerOfMatchPlayerId?.trim() || null;
+
     for (const s of stats) {
-      const pts = adminStatInputToFantasyPoints(matchId, s);
+      const isPlayerOfTheMatch = Boolean(
+        pomId && String(s.playerId) === pomId && s.participated
+      );
+      const pts = adminStatInputToFantasyPoints(matchId, { ...s, isPlayerOfTheMatch });
       await PlayerMatchScore.findOneAndUpdate(
         { player: s.playerId, match: matchId },
         {
@@ -179,7 +188,19 @@ export async function submitMatchScores(matchId: string, stats: PlayerStatInput[
       await scoreEntriesForCompetition(c._id, match._id, matchScoresByPlayer, session);
     }
 
-    await Match.updateOne({ _id: matchId }, { $set: { isScored: true } }, { session });
+    if (pomId) {
+      await Match.updateOne(
+        { _id: matchId },
+        { $set: { isScored: true, playerOfMatch: new mongoose.Types.ObjectId(pomId) } },
+        { session }
+      );
+    } else {
+      await Match.updateOne(
+        { _id: matchId },
+        { $set: { isScored: true }, $unset: { playerOfMatch: "" } },
+        { session }
+      );
+    }
 
     await session.commitTransaction();
   } catch (e) {
