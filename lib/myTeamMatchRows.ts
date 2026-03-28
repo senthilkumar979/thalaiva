@@ -74,7 +74,7 @@ function serializePlayerPoints(
     return {
       player,
       isCaptain: row.isCaptain,
-      isViceCaptain: Boolean(row.isViceCaptain),
+      isViceCaptain: row.isViceCaptain ?? false,
       rawPoints: row.rawPoints,
       captainMultiplied: row.captainMultiplied,
     };

@@ -24,8 +24,6 @@ export const MyTeamMatchAccordionItem = ({
   )
   const rankLabel = row.rankThisMatch != null ? `#${row.rankThisMatch}` : '—'
 
-  console.log(row)
-
   return (
     <details className="group rounded-xl border border-white/15 bg-white/5 text-white open:bg-white/[0.07]">
       <summary className="cursor-pointer list-none px-4 py-3 pr-10 [&::-webkit-details-marker]:hidden">

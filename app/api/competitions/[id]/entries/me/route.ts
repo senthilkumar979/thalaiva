@@ -17,11 +17,10 @@ export async function GET(_req: Request, { params }: RouteParams) {
       .populate("tier2Players", "name franchise tier role")
       .populate("tier3Players", "name franchise tier role")
       .populate("captain", "name franchise tier role")
-      .populate({
-        path: "viceCaptain",
-        select: "name franchise tier role",
-        strictPopulate: false,
-      })
+      .populate(
+        "viceCaptain",
+        "name franchise tier role"
+      )
       .lean();
     if (!entry) return NextResponse.json(null);
     return NextResponse.json(entry);
