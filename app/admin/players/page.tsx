@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { FileSpreadsheet, Table2 } from "lucide-react";
+import { FileSpreadsheet, Table2, Users } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { PlayersPreview } from "./PlayersPreview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,24 +81,24 @@ export default function AdminPlayersPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Player pool</h1>
-        <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-          Upload Excel (.xlsx) with columns Team Name, Player Name, Player Category, Value — or paste CSV for
-          bulk import.
-        </p>
-      </div>
+    <div className="space-y-8 sm:space-y-10">
+      <AdminPageHeader
+        accent="violet"
+        segment="Admin · Roster"
+        title="Player pool"
+        description="Upload Excel (.xlsx) with columns Team Name, Player Name, Player Category, Value — or paste CSV for bulk import."
+        icon={Users}
+      />
 
-      <Card className="overflow-hidden border-border/80 shadow-sm">
-        <CardHeader className="border-b border-border/60 bg-muted/25">
+      <Card className="overflow-hidden border-white/10 bg-white/[0.04] shadow-sm ring-1 ring-white/10">
+        <CardHeader className="border-b border-white/10 bg-white/[0.04]">
           <div className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-background">
-              <FileSpreadsheet className="size-4 text-foreground/80" aria-hidden />
+            <span className="flex size-9 items-center justify-center rounded-lg border border-white/15 bg-white/5">
+              <FileSpreadsheet className="size-4 text-white/80" aria-hidden />
             </span>
             <div>
-              <CardTitle className="text-lg">Upload Excel (.xlsx)</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-lg text-white">Upload Excel (.xlsx)</CardTitle>
+              <CardDescription className="text-white/65 [&_strong]:text-white/80">
                 <strong>Value</strong>: Good → 1 pt, Super → 3 pt, Excellent → 5 pt.{" "}
                 <strong>Player Category</strong> maps to bat / bowl / wk / allrounder.
               </CardDescription>
@@ -109,7 +110,7 @@ export default function AdminPlayersPage() {
             ref={fileInputRef}
             type="file"
             accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            className="text-sm text-white/80 file:mr-3 file:rounded-md file:border-0 file:bg-white/15 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-white/25"
             onChange={onXlsx}
           />
           {previewRows && (
@@ -123,21 +124,34 @@ export default function AdminPlayersPage() {
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-border/80 shadow-sm">
-        <CardHeader className="border-b border-border/60 bg-muted/25">
+      <Card className="overflow-hidden border-white/10 bg-white/[0.04] shadow-sm ring-1 ring-white/10">
+        <CardHeader className="border-b border-white/10 bg-white/[0.04]">
           <div className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-background">
-              <Table2 className="size-4 text-foreground/80" aria-hidden />
+            <span className="flex size-9 items-center justify-center rounded-lg border border-white/15 bg-white/5">
+              <Table2 className="size-4 text-white/80" aria-hidden />
             </span>
             <div>
-              <CardTitle className="text-lg">Upload CSV (legacy)</CardTitle>
-              <CardDescription>Columns: name, franchise (short code), tier (1|3|5), role.</CardDescription>
+              <CardTitle className="text-lg text-white">Upload CSV (legacy)</CardTitle>
+              <CardDescription className="text-white/65">
+                Columns: name, franchise (short code), tier (1|3|5), role.
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-6">
-          <Textarea value={csv} onChange={(e) => setCsv(e.target.value)} rows={12} className="font-mono text-xs" />
-          <Button type="button" onClick={uploadCsv} disabled={loading}>
+          <Textarea
+            value={csv}
+            onChange={(e) => setCsv(e.target.value)}
+            rows={12}
+            className="border-white/15 bg-white/5 font-mono text-xs text-white placeholder:text-white/40"
+          />
+          <Button
+            type="button"
+            onClick={uploadCsv}
+            disabled={loading}
+            className="border-white/20 bg-white/10 text-white hover:bg-white/15"
+            variant="outline"
+          >
             {loading ? "Uploading…" : "Upload CSV"}
           </Button>
         </CardContent>

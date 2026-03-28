@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, LayoutDashboard, Trophy, Users } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -32,44 +33,45 @@ const sections = [
 
 export default function AdminHomePage() {
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
-            <LayoutDashboard className="size-3.5" aria-hidden />
-            Operations
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Admin</h1>
-          <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-            Manage data and scoring for Thalaiva — player imports, fixtures, and competition settings.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8 sm:space-y-10">
+      <AdminPageHeader
+        accent="slate"
+        segment="Admin · Overview"
+        title="Operations"
+        description="Manage data and scoring for Thalaiva — player imports, fixtures, and competition settings. Same layout as other admin sections."
+        icon={LayoutDashboard}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map(({ href, title, description, icon: Icon, card, iconBox }) => (
-          <Link key={href} href={href} className="group block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <Link
+            key={href}
+            href={href}
+            className="group block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a1f4a]"
+          >
             <Card
               className={cn(
-                "h-full border-border/80 bg-gradient-to-br ring-1 transition-all duration-200",
-                "hover:-translate-y-0.5 hover:shadow-md",
+                "h-full border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] ring-1 ring-white/10 transition-all duration-200",
+                "hover:-translate-y-0.5 hover:border-white/15 hover:shadow-lg hover:shadow-black/20",
                 card
               )}
             >
               <CardContent className="flex h-full flex-col gap-4 p-5 sm:p-6">
                 <span
                   className={cn(
-                    "flex size-11 items-center justify-center rounded-xl border bg-background/90 ring-1 ring-border/50",
+                    "flex size-11 items-center justify-center rounded-xl border border-white/15 bg-white/5 ring-1 ring-white/10",
                     iconBox
                   )}
                 >
-                  <Icon className="size-5 text-foreground/90" aria-hidden />
+                  <Icon className="size-5 text-white" aria-hidden />
                 </span>
                 <div className="space-y-1.5">
-                  <h2 className="text-lg font-semibold tracking-tight group-hover:text-primary">{title}</h2>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <h2 className="text-lg font-semibold tracking-tight text-white group-hover:text-white">
+                    {title}
+                  </h2>
+                  <p className="text-sm leading-relaxed text-white/65">{description}</p>
                 </div>
-                <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primary">
+                <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-sky-200">
                   Open
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </span>

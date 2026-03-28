@@ -30,9 +30,9 @@ export const AdminScoreTotalsBar = ({
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/90">
         Match total
       </p>
-      <p className="mt-1 tabular-nums text-3xl font-bold tracking-tight text-primary">
+      <p className="mt-1 tabular-nums text-3xl font-bold tracking-tight text-primary text-yellow-500">
         {grandTotal}
-        <span className="ml-1 text-base font-semibold text-muted-foreground">
+        <span className="ml-1 text-base font-semibold text-white  text-yellow-500">
           pts
         </span>
       </p>

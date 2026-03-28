@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AdminScoreForm, type HydratedPlayerMatchScore } from "@/components/AdminScoreForm";
+import { AdminBackLink } from "@/components/admin/AdminBackLink";
 import { AdminScoreMatchPageHero } from "@/components/admin/AdminScoreMatchPageHero";
 import { AdminScoreSheetGuide } from "@/components/admin/AdminScoreSheetGuide";
 import type { ScorePlayerLite } from "@/components/admin/AdminScoreRosterTab";
@@ -94,29 +94,29 @@ export default function AdminScorePage() {
       <AdminScoreMatchPageHero loading={loading} match={heroMatch} />
 
       {loadError ? (
-        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {loadError}
         </p>
       ) : null}
 
       {loading ? (
         <div className="space-y-4">
-          <div className="h-28 animate-pulse rounded-2xl bg-muted/40" aria-hidden />
-          <div className="h-72 animate-pulse rounded-2xl bg-muted/30" aria-hidden />
+          <div className="h-28 animate-pulse rounded-2xl bg-white/10" aria-hidden />
+          <div className="h-72 animate-pulse rounded-2xl bg-white/[0.06]" aria-hidden />
         </div>
       ) : (
         <>
           <AdminScoreSheetGuide />
 
           {scored ? (
-            <p className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100/90">
+            <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/15 px-4 py-3 text-sm text-emerald-100">
               Saved for this fixture. You can change any row and save again — entry totals and ranks are
               recalculated.
             </p>
           ) : null}
 
           {showForm && match ? (
-            <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm ring-1 ring-border/30 sm:p-6">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-sm ring-1 ring-white/10 sm:p-6">
               <AdminScoreForm
                 matchId={id}
                 players={players}
@@ -130,7 +130,7 @@ export default function AdminScorePage() {
           ) : null}
 
           {!loadError && match && players.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-white/20 px-4 py-10 text-center text-sm text-white/70">
               No players found for these franchises. Upload the pool first.
             </p>
           ) : null}
@@ -138,12 +138,9 @@ export default function AdminScorePage() {
       )}
 
       {!loading ? (
-        <Link
-          href="/admin/matches"
-          className="inline-flex text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
+        <AdminBackLink href="/admin/matches" className="text-white/70 hover:text-white">
           ← Back to matches
-        </Link>
+        </AdminBackLink>
       ) : null}
     </div>
   );

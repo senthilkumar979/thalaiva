@@ -70,20 +70,25 @@ export const AdminScorePlayerAccordion = ({
 
   return (
     <>
-      <details className="group rounded-xl border border-border/80 bg-card shadow-sm">
+      <details
+        className={cn(
+          "group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-sm ring-1 ring-white/5 transition-colors",
+          "open:border-white/15 open:bg-white/[0.05] open:shadow-md open:shadow-black/15"
+        )}
+      >
         <summary
           className={cn(
-            "flex cursor-pointer list-none items-center gap-3 px-4 py-3",
+            "flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 sm:px-5",
             "[&::-webkit-details-marker]:hidden"
           )}
         >
           <AdminScoreTeamLogo logoUrl={franchiseLogoUrl} shortCode={franchiseShortCode} size="sm" />
           <div className="min-w-0 flex-1 text-left">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium">{name}</span>
+              <span className="font-semibold text-white">{name}</span>
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                  "inline-flex items-center gap-1.5 rounded-md border border-sky-400/25 bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-100"
                 )}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- IPL SVG from iplt20.com */}
@@ -91,24 +96,24 @@ export const AdminScorePlayerAccordion = ({
                 {iplRoleLabel(role)}
               </span>
             </div>
-            <div className="text-xs text-muted-foreground">{franchiseLabel}</div>
+            <div className="text-xs text-white/55">{franchiseLabel}</div>
           </div>
           <div
             className={cn(
               "flex shrink-0 items-center gap-1 tabular-nums text-lg font-semibold",
-              participated ? "text-primary" : "text-muted-foreground"
+              participated ? "text-emerald-200" : "text-white/45"
             )}
           >
             <span>
               {displayPoints}
-              <span className="ml-1 text-sm font-medium text-muted-foreground">pts</span>
+              <span className="ml-1 text-sm font-medium text-white/45">pts</span>
             </span>
             {showInfo ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+                className="size-8 shrink-0 text-white/50 hover:bg-white/10 hover:text-white"
                 aria-label="How these points were calculated"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
@@ -122,20 +127,23 @@ export const AdminScorePlayerAccordion = ({
             ) : null}
           </div>
           <ChevronDown
-            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            className="size-5 shrink-0 text-white/45 transition-transform group-open:rotate-180 group-open:text-white/70"
             aria-hidden
           />
         </summary>
-        <div className="space-y-4 border-t border-border/60 bg-muted/10 p-3">
-          <div className="flex items-center gap-3 rounded-lg border border-primary/15 bg-primary/5 px-3 py-2">
+        <div className="space-y-4 border-t border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent p-3 sm:p-4">
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2.5">
             <input
               id={`participated-${value.playerId}`}
               type="checkbox"
-              className="size-4 shrink-0 rounded border-input accent-primary"
+              className="size-4 shrink-0 rounded border-white/25 accent-emerald-400"
               checked={participated}
               onChange={(e) => onParticipationChange(e.target.checked)}
             />
-            <Label htmlFor={`participated-${value.playerId}`} className="cursor-pointer text-sm font-medium leading-none">
+            <Label
+              htmlFor={`participated-${value.playerId}`}
+              className="cursor-pointer text-sm font-medium leading-none text-white"
+            >
               Played in XI (+{FANTASY_SCORING_POINT_VALUES.XI_PARTICIPATION} pts)
             </Label>
           </div>
@@ -146,9 +154,10 @@ export const AdminScorePlayerAccordion = ({
               value={value}
               onChange={onChange}
               showHeader={false}
+              surface="shell"
             />
           ) : (
-            <p className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-3 py-4 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-white/20 bg-white/[0.03] px-3 py-4 text-center text-sm text-white/60">
               Check &quot;Played in XI&quot; to enter batting, bowling, and fielding stats.
             </p>
           )}

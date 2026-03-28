@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { AdminCreateMatchPanel } from "@/components/admin/AdminCreateMatchPanel";
 import { AdminEditMatchDialog } from "@/components/admin/AdminEditMatchDialog";
-import {
-  AdminMatchScheduleList,
-  type AdminMatchRow,
-} from "@/components/admin/AdminMatchScheduleList";
+import { AdminMatchScheduleList, type AdminMatchRow } from "@/components/admin/AdminMatchScheduleList";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 
 interface Franchise {
@@ -76,42 +74,34 @@ export default function AdminMatchesPage() {
   };
 
   return (
-    <div className="space-y-12">
-      <header className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-slate-950/[0.03] via-transparent to-emerald-950/[0.06] px-6 py-8 dark:from-slate-950/40 dark:to-emerald-950/20 sm:px-8 sm:py-10">
-        <div
-          className="pointer-events-none absolute -right-12 top-0 h-40 w-40 rounded-full bg-emerald-500/20 blur-3xl dark:bg-emerald-500/10"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 text-emerald-700 dark:text-emerald-400/90">
-              <span className="flex size-10 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/10 shadow-inner">
-                <CalendarDays className="size-5" aria-hidden />
-              </span>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Matches</h1>
-              <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
-                Build the season fixture by fixture. Each match unlocks fantasy scoring for every player in the two
-                squads.
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-col items-stretch gap-3 sm:items-end">
-            <div className="flex shrink-0 flex-col items-start gap-1 rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-left backdrop-blur-sm sm:items-end sm:text-right">
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Scheduled</span>
-              <span className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+    <div className="space-y-8 sm:space-y-10">
+      <AdminPageHeader
+        accent="emerald"
+        segment="Admin · Fixtures"
+        title="Matches"
+        description="Build the season fixture by fixture. Each match unlocks fantasy scoring for every player in the two squads."
+        icon={CalendarDays}
+        actions={
+          <>
+            <div className="flex flex-col items-start gap-1 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left backdrop-blur-sm sm:items-end sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/50">Scheduled</span>
+              <span className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-white">
                 {matches.length}
               </span>
             </div>
             {!scheduleOpen ? (
-              <Button type="button" size="lg" className="rounded-xl font-semibold" onClick={() => setScheduleOpen(true)}>
+              <Button
+                type="button"
+                size="lg"
+                className="h-11 rounded-xl border border-white/25 bg-white/5 font-semibold text-white hover:bg-white/10"
+                onClick={() => setScheduleOpen(true)}
+              >
                 Schedule match
               </Button>
             ) : null}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {scheduleOpen ? (
         <AdminCreateMatchPanel

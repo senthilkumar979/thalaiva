@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Trophy } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AdminCompetition {
@@ -43,63 +44,72 @@ export default function AdminCompetitionsPage() {
       .finally(() => setLoading(false));
   }, [status, session?.user?.role]);
 
-  if (status === "loading" || loading) {
+  if (status === "loading") {
     return (
       <div className="flex min-h-[30vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        <Loader2 className="size-8 animate-spin text-white/50" aria-hidden />
       </div>
     );
   }
 
   if (status === "unauthenticated" || session?.user?.role !== "admin") {
-    return <p className="text-muted-foreground">Admin access only.</p>;
+    return <p className="text-white/70">Admin access only.</p>;
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Competitions</h1>
-        <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-          Open a league to freeze entries or edit details — the same controls are available on each competition
-          page.
-        </p>
-      </div>
+    <div className="space-y-8 sm:space-y-10">
+      <AdminPageHeader
+        accent="amber"
+        segment="Admin · Leagues"
+        title="Competitions"
+        description="Open a league to freeze entries or edit details — the same controls are available on each competition page. Mirrors the public competition hub, in admin context."
+        icon={Trophy}
+      />
 
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      {error ? (
+        <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
         </p>
+      ) : null}
+
+      {loading ? (
+        <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/[0.04]">
+          <Loader2 className="size-8 animate-spin text-white/50" aria-hidden />
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {rows.map((c) => (
+            <Card
+              key={c._id}
+              className="border-white/10 bg-white/[0.04] shadow-sm ring-1 ring-white/10 transition-shadow hover:border-white/15 hover:shadow-lg hover:shadow-black/15"
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-white">{c.name}</CardTitle>
+                <CardDescription className="text-white/65">
+                  Deadline: {new Date(c.entryDeadline).toLocaleString()}
+                  {c.entriesFrozen ? " · Entries frozen" : ""}
+                  {!c.isActive ? " · Inactive" : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href={`/competitions/${c._id}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-200 underline-offset-4 hover:text-white hover:underline"
+                >
+                  Open competition
+                  <ExternalLink className="size-3.5 opacity-70" aria-hidden />
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
-      <div className="grid gap-4">
-        {rows.map((c) => (
-          <Card key={c._id} className="border-border/80 shadow-sm transition-shadow hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{c.name}</CardTitle>
-              <CardDescription>
-                Deadline: {new Date(c.entryDeadline).toLocaleString()}
-                {c.entriesFrozen ? " · Entries frozen" : ""}
-                {!c.isActive ? " · Inactive" : ""}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link
-                href={`/competitions/${c._id}`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Open competition
-                <ExternalLink className="size-3.5 opacity-70" aria-hidden />
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {rows.length === 0 && !error && (
-        <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+      {!loading && rows.length === 0 && !error ? (
+        <p className="rounded-xl border border-dashed border-white/20 px-4 py-10 text-center text-sm text-white/65">
           No competitions yet.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

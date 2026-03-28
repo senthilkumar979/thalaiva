@@ -26,6 +26,8 @@ interface AdminCreateMatchFieldsProps {
   isSubmitting?: boolean;
   className?: string;
   footerHint?: string;
+  /** Dark glass fields for the admin IPL shell (create panel on /admin/matches) */
+  forIplShell?: boolean;
 }
 
 export const AdminCreateMatchFields = ({
@@ -46,6 +48,7 @@ export const AdminCreateMatchFields = ({
   isSubmitting,
   className,
   footerHint,
+  forIplShell = false,
 }: AdminCreateMatchFieldsProps) => {
   const venueOk = venue === "home" || venue === "away";
   const ready = Boolean(franchiseA && franchiseB && when && venueOk);
@@ -63,6 +66,7 @@ export const AdminCreateMatchFields = ({
         onFranchiseAChange={onFranchiseAChange}
         franchiseB={franchiseB}
         onFranchiseBChange={onFranchiseBChange}
+        forIplShell={forIplShell}
       />
       <AdminMatchMetaFields
         matchNumber={matchNumber}
@@ -71,10 +75,25 @@ export const AdminCreateMatchFields = ({
         onWhenChange={onWhenChange}
         venue={venue}
         onVenueChange={onVenueChange}
+        forIplShell={forIplShell}
       />
-      <div className="flex flex-wrap items-center gap-4 border-t border-border/40 pt-6">
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-4 border-t pt-6",
+          forIplShell ? "border-white/10" : "border-border/40"
+        )}
+      >
         {onCancel ? (
-          <Button type="button" variant="outline" size="lg" disabled={isSubmitting} onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={isSubmitting}
+            onClick={onCancel}
+            className={
+              forIplShell ? "border-white/20 bg-white/5 text-white hover:bg-white/10" : undefined
+            }
+          >
             Cancel
           </Button>
         ) : null}
@@ -91,7 +110,9 @@ export const AdminCreateMatchFields = ({
         >
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
-        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        {hint ? (
+          <p className={cn("text-xs", forIplShell ? "text-white/55" : "text-muted-foreground")}>{hint}</p>
+        ) : null}
       </div>
     </div>
   );

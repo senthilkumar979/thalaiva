@@ -9,6 +9,10 @@ export interface AdminFranchiseOption {
 export const ADMIN_MATCH_SELECT_CLASS =
   "flex h-11 w-full cursor-pointer appearance-none rounded-xl border border-border/80 bg-background/80 px-4 text-sm font-medium shadow-sm outline-none transition-[border,box-shadow] hover:border-border focus-visible:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500/20 dark:bg-background/50";
 
+/** Select styling when the form sits on the admin IPL gradient shell */
+export const ADMIN_MATCH_SELECT_CLASS_IPL =
+  "flex h-11 w-full cursor-pointer appearance-none rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-white shadow-sm outline-none transition-[border,box-shadow] hover:border-white/25 focus-visible:border-emerald-400/50 focus-visible:ring-2 focus-visible:ring-emerald-400/25";
+
 export function adminFranchiseOptions(franchises: AdminFranchiseOption[]): ReactNode {
   return franchises.map((f) => (
     <option key={f._id} value={f._id}>

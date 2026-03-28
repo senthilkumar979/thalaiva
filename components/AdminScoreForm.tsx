@@ -150,19 +150,19 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
 
   return (
     <div className="space-y-6">
-      <p className="text-sm leading-relaxed text-muted-foreground">
+      <p className="text-sm leading-relaxed text-white">
         Enter{" "}
-        <strong className="font-medium text-foreground">raw match stats</strong> for each player who{" "}
-        <strong className="font-medium text-foreground">played in the XI</strong> — same categories as{" "}
+        <strong className="font-medium text-white font-bold text-yellow-500">raw match stats</strong> for each player who{' '}
+        <strong className="font-medium text-white font-bold text-yellow-500">played in the XI</strong> — same categories as{" "}
         <Link
           href="/competitions"
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-white font-bold underline"
         >
           Scoring rules
         </Link>
-        . Milestones, strike rate, economy, and hauls are derived automatically. Flag{" "}
-        <strong className="font-medium text-foreground">hat-tricks</strong> and count{" "}
-        <strong className="font-medium text-foreground">assisted run-outs</strong> where applicable. Captain,
+        . Milestones, strike rate, economy, and hauls are derived automatically. Flag{' '}
+        <strong className="font-medium text-white font-bold  text-yellow-500">hat-tricks</strong> and count{' '}
+        <strong className="font-medium text-foreground  text-yellow-500">assisted run-outs</strong> where applicable. Captain,
         vice-captain, and playoff multipliers apply on entries, not on this sheet.
       </p>
       <AdminScoreTotalsBar grandTotal={grandTotal} teams={[teamTotals[0], teamTotals[1]]} />

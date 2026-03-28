@@ -17,7 +17,7 @@ interface AdminScoreTeamMatchTabsProps {
 
 /** Base UI sets `data-active` on the selected tab; Tailwind needs `data-[active]:` to target it. */
 const tabTriggerCls =
-  'gap-2 px-4 py-2.5 bg-[#19398a]/10 text-[#19398a] data-[active]:bg-[#19398a] data-[active]:text-primary-foreground data-[active]:shadow-sm'
+  'gap-2 px-4 py-2.5 bg-yellow-500/20 border border-white/20 data-[active]:bg-yellow-500 data-[active]:text-primary-foreground data-[active]:shadow-sm text-white hover:text-yellow-500'
 
 export const AdminScoreTeamMatchTabs = ({
   matchTeams,

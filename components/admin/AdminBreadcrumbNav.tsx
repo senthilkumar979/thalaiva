@@ -7,5 +7,5 @@ import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBrea
 export const AdminBreadcrumbNav = () => {
   const pathname = usePathname();
   const items = buildAdminBreadcrumbs(pathname);
-  return <CompetitionBreadcrumb items={items} variant="light" />;
+  return <CompetitionBreadcrumb items={items} variant="dark" />;
 };

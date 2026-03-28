@@ -32,7 +32,7 @@ export const AdminScoreRosterTab = ({
 }: AdminScoreRosterTabProps) => {
   if (list.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-dashed border-white/20 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/65">
         No players in this squad.
       </p>
     );
