@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BarChart3, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PlayerScoreIdentityBlock } from "@/components/PlayerScoreIdentityBlock";
 import { cn } from "@/lib/utils";
 import {
   getPlayerMatchFantasyPointsBreakdown,
@@ -21,47 +22,57 @@ interface PlayerMatchScoreDetailDrawerProps {
   onOpenChange: (open: boolean) => void;
   playerName: string;
   matchTitle: string;
+  franchiseShortCode: string;
+  franchiseLogoUrl?: string;
+  franchiseName?: string;
+  role: string;
   Batting: IBattingStats;
   Bowling: IBowlingStats;
   Fielding: IFieldingStats;
   participated: boolean;
 }
 
-function BreakdownList({
+function FantasyLineRows({ rows }: { rows: { label: string; points: number }[] }) {
+  return (
+    <ul className="mt-3 space-y-1.5 text-sm">
+      {rows.map((r) => (
+        <li key={r.label} className="flex justify-between gap-4 tabular-nums">
+          <span className="text-white/85">{r.label}</span>
+          <span className={cn("font-medium", r.points < 0 ? "text-rose-300" : "text-emerald-200")}>
+            {r.points > 0 ? "+" : ""}
+            {r.points}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const fantasyAccent = {
+  amber: "border-amber-400/25 bg-white/[0.04] ring-amber-400/10",
+  sky: "border-sky-400/25 bg-white/[0.04] ring-sky-400/10",
+  emerald: "border-emerald-400/25 bg-white/[0.04] ring-emerald-400/10",
+  violet: "border-violet-400/25 bg-white/[0.04] ring-violet-400/10",
+} as const;
+
+function FantasySectionCard({
   title,
   rows,
-  className,
+  accent,
 }: {
   title: string;
   rows: { label: string; points: number }[];
-  className?: string;
+  accent: keyof typeof fantasyAccent;
 }) {
-  const sum = rows.reduce((s, r) => s + r.points, 0);
-  if (rows.length === 0 && sum === 0) return null;
   return (
-    <div className={cn("space-y-2 border-t border-white/10 pt-3", className)}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50">{title}</p>
+    <section className={cn("rounded-xl border p-4 ring-1", fantasyAccent[accent])}>
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">{title}</h3>
       {rows.length === 0 ? (
-        <p className="text-sm text-white/45">No fantasy points in this section.</p>
+        <p className="mt-3 text-sm text-white/45">No fantasy points in this section.</p>
       ) : (
-        <ul className="space-y-1.5 text-sm">
-          {rows.map((r) => (
-            <li key={r.label} className="flex justify-between gap-4 tabular-nums">
-              <span className="text-white/85">{r.label}</span>
-              <span
-                className={cn(
-                  "font-medium",
-                  r.points < 0 ? "text-rose-300" : "text-emerald-200"
-                )}
-              >
-                {r.points > 0 ? "+" : ""}
-                {r.points}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <FantasyLineRows rows={rows} />
       )}
-    </div>
+    </section>
   );
 }
 
@@ -102,6 +113,10 @@ export const PlayerMatchScoreDetailDrawer = ({
   onOpenChange,
   playerName,
   matchTitle,
+  franchiseShortCode,
+  franchiseLogoUrl,
+  franchiseName,
+  role,
   Batting,
   Bowling,
   Fielding,
@@ -155,21 +170,24 @@ export const PlayerMatchScoreDetailDrawer = ({
               {participated ? "Played in XI" : "Bench / DNP"}
             </span>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/5">
-              <BarChart3 className="size-4 text-amber-300/90" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1 space-y-1">
-              <DialogTitle className="text-xl font-bold leading-tight tracking-tight text-white">
-                {playerName}
-              </DialogTitle>
-              <p className="text-sm font-normal leading-snug text-white/65">{matchTitle}</p>
-            </div>
+          <div className="space-y-1">
+            <DialogTitle className="text-xl font-bold leading-tight tracking-tight text-white">
+              {playerName}
+            </DialogTitle>
+            <p className="text-sm font-normal leading-snug text-white/65">{matchTitle}</p>
           </div>
+          <PlayerScoreIdentityBlock
+            franchiseShortCode={franchiseShortCode}
+            franchiseLogoUrl={franchiseLogoUrl}
+            franchiseLine={franchiseName}
+            role={role}
+          />
         </DialogHeader>
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col space-y-5 overflow-y-auto px-5 py-5 text-sm">
-          <RawBlock title="Batting — raw">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Raw stats</p>
+
+          <RawBlock title="Batting">
             <RawDl
               items={[
                 { label: "Runs", value: Batting.runs },
@@ -185,10 +203,9 @@ export const PlayerMatchScoreDetailDrawer = ({
                 { label: "Out", value: Batting.isOut ? "Yes" : "No" },
               ]}
             />
-            <BreakdownList title="Batting — fantasy" rows={grouped.batting} />
           </RawBlock>
 
-          <RawBlock title="Bowling — raw">
+          <RawBlock title="Bowling">
             <RawDl
               items={[
                 { label: "Wickets", value: Bowling.wickets },
@@ -204,10 +221,9 @@ export const PlayerMatchScoreDetailDrawer = ({
                 },
               ]}
             />
-            <BreakdownList title="Bowling — fantasy" rows={grouped.bowling} />
           </RawBlock>
 
-          <RawBlock title="Fielding — raw">
+          <RawBlock title="Fielding">
             <RawDl
               items={[
                 { label: "Catches", value: Fielding.catches },
@@ -215,13 +231,18 @@ export const PlayerMatchScoreDetailDrawer = ({
                 { label: "Run-outs", value: Fielding.runOuts },
               ]}
             />
-            <BreakdownList title="Fielding — fantasy" rows={grouped.fielding} />
           </RawBlock>
 
+          <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+            Fantasy points
+          </p>
+
+          <FantasySectionCard title="Batting" rows={grouped.batting} accent="amber" />
+          <FantasySectionCard title="Bowling" rows={grouped.bowling} accent="sky" />
+          <FantasySectionCard title="Fielding" rows={grouped.fielding} accent="emerald" />
+
           {grouped.participation.length > 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 ring-1 ring-white/5">
-              <BreakdownList title="Bonus" rows={grouped.participation} className="border-t-0 pt-0" />
-            </div>
+            <FantasySectionCard title="Match participation" rows={grouped.participation} accent="violet" />
           ) : null}
 
           <div className="flex items-center justify-between rounded-xl border border-emerald-400/25 bg-emerald-500/15 px-4 py-3 font-semibold tabular-nums text-emerald-100 shadow-inner shadow-black/20">

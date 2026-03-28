@@ -20,7 +20,7 @@ export interface MatchScorePlayerRow {
   };
 }
 
-interface FranchiseLite {
+export interface FranchiseLite {
   _id: string;
   name: string;
   shortCode: string;
@@ -96,7 +96,11 @@ function MatchAccordionBlock({
   onPlayer,
 }: {
   block: MatchScoreBlock;
-  onPlayer: (row: MatchScorePlayerRow, matchTitle: string) => void;
+  onPlayer: (
+    row: MatchScorePlayerRow,
+    matchTitle: string,
+    franchise: FranchiseLite
+  ) => void;
 }) {
   const { match, franchiseA, franchiseB, players } = block;
   const teamA = sortByPoints(players.filter((p) => p.side === "a"));
@@ -130,7 +134,11 @@ function MatchAccordionBlock({
                 <p className="text-center text-sm text-white/50">No scores</p>
               ) : (
                 teamA.map((row) => (
-                  <PlayerScoreButton key={row.playerId} row={row} onSelect={() => onPlayer(row, title)} />
+                  <PlayerScoreButton
+                    key={row.playerId}
+                    row={row}
+                    onSelect={() => onPlayer(row, title, franchiseA)}
+                  />
                 ))
               )}
             </div>
@@ -144,7 +152,11 @@ function MatchAccordionBlock({
                 <p className="text-center text-sm text-white/50">No scores</p>
               ) : (
                 teamB.map((row) => (
-                  <PlayerScoreButton key={row.playerId} row={row} onSelect={() => onPlayer(row, title)} />
+                  <PlayerScoreButton
+                    key={row.playerId}
+                    row={row}
+                    onSelect={() => onPlayer(row, title, franchiseB)}
+                  />
                 ))
               )}
             </div>
@@ -157,7 +169,7 @@ function MatchAccordionBlock({
 
 interface CompetitionMatchScoresAccordionProps {
   blocks: MatchScoreBlock[];
-  onPlayer: (row: MatchScorePlayerRow, matchTitle: string) => void;
+  onPlayer: (row: MatchScorePlayerRow, matchTitle: string, franchise: FranchiseLite) => void;
 }
 
 export const CompetitionMatchScoresAccordion = ({ blocks, onPlayer }: CompetitionMatchScoresAccordionProps) => (

@@ -14,7 +14,6 @@ import {
   type KnownPlayerRole,
 } from "@/lib/iplRoleIcons";
 import { statFormToPlayerMatchStats } from "@/lib/adminScoreToUpdatedStats";
-import { getUpdatedScoreBreakdownLines } from "@/lib/adminUpdatedScoreBreakdown";
 import { calculateFantasyPoints, FANTASY_SCORING_POINT_VALUES } from "@/lib/updatedScoring";
 import { cn } from "@/lib/utils";
 import type { PlayerRole } from "@/models/Player";
@@ -58,7 +57,6 @@ export const AdminScorePlayerAccordion = ({
   );
 
   const displayPoints = Number.isFinite(breakdown.finalScore) ? breakdown.finalScore : 0;
-  const lineItems = useMemo(() => getUpdatedScoreBreakdownLines(breakdown), [breakdown]);
   const showInfo = displayPoints >= 1;
 
   return (
@@ -173,9 +171,11 @@ export const AdminScorePlayerAccordion = ({
         open={breakdownOpen}
         onOpenChange={setBreakdownOpen}
         playerName={name}
-        lineItems={lineItems}
-        rawTotal={Number.isFinite(breakdown.rawTotal) ? breakdown.rawTotal : 0}
-        finalScore={displayPoints}
+        franchiseShortCode={franchiseShortCode}
+        franchiseLogoUrl={franchiseLogoUrl}
+        franchiseLine={franchiseLabel !== franchiseShortCode ? franchiseLabel : undefined}
+        role={role}
+        pointsBreakdown={breakdown}
       />
     </>
   );

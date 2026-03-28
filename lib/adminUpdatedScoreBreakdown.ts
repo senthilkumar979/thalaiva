@@ -41,3 +41,60 @@ export function getUpdatedScoreBreakdownLines(b: PointsBreakdown): { label: stri
   }
   return rows;
 }
+
+const BATTING_KEYS = new Set<keyof PointsBreakdown>([
+  "runPoints",
+  "fourPoints",
+  "sixPoints",
+  "strikeRateBonus",
+  "milestone30",
+  "milestone50",
+  "milestone100",
+]);
+
+const BOWLING_KEYS = new Set<keyof PointsBreakdown>([
+  "overPoints",
+  "wicketPoints",
+  "dotBallPoints",
+  "maidenPoints",
+  "economyBonus",
+  "hattrickBonus",
+  "haul3wBonus",
+  "haul5wBonus",
+  "haul6wBonus",
+]);
+
+const FIELDING_KEYS = new Set<keyof PointsBreakdown>([
+  "catchPoints",
+  "stumpingPoints",
+  "directRunOutPoints",
+  "assistedRunOutPoints",
+]);
+
+export interface GroupedUpdatedBreakdownLines {
+  batting: { label: string; points: number }[];
+  bowling: { label: string; points: number }[];
+  fielding: { label: string; points: number }[];
+  /** XI, awards, season bonuses, etc. */
+  other: { label: string; points: number }[];
+}
+
+/** Non-zero line items bucketed by batting / bowling / fielding / other (admin UI). */
+export function groupUpdatedBreakdownLinesBySection(b: PointsBreakdown): GroupedUpdatedBreakdownLines {
+  const batting: { label: string; points: number }[] = [];
+  const bowling: { label: string; points: number }[] = [];
+  const fielding: { label: string; points: number }[] = [];
+  const other: { label: string; points: number }[] = [];
+
+  for (const { key, label } of LINE_KEYS) {
+    const v = b[key] as number;
+    if (!Number.isFinite(v) || v === 0) continue;
+    const row = { label, points: v };
+    if (BATTING_KEYS.has(key)) batting.push(row);
+    else if (BOWLING_KEYS.has(key)) bowling.push(row);
+    else if (FIELDING_KEYS.has(key)) fielding.push(row);
+    else other.push(row);
+  }
+
+  return { batting, bowling, fielding, other };
+}

@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import {
   CompetitionMatchScoresAccordion,
+  type FranchiseLite,
   type MatchScoreBlock,
   type MatchScorePlayerRow,
 } from "@/components/competitions/CompetitionMatchScoresAccordion";
@@ -27,6 +28,7 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
   const [drawer, setDrawer] = useState<{
     row: MatchScorePlayerRow;
     matchTitle: string;
+    franchise: FranchiseLite;
   } | null>(null);
 
   useEffect(() => {
@@ -110,7 +112,7 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
           ) : (
             <CompetitionMatchScoresAccordion
               blocks={data.matches}
-              onPlayer={(row, matchTitle) => setDrawer({ row, matchTitle })}
+              onPlayer={(row, matchTitle, franchise) => setDrawer({ row, matchTitle, franchise })}
             />
           )}
         </div>
@@ -124,6 +126,12 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
           }}
           playerName={drawerPlayer.name}
           matchTitle={drawer?.matchTitle ?? ""}
+          franchiseShortCode={drawer.franchise.shortCode}
+          franchiseLogoUrl={drawer.franchise.logoUrl}
+          franchiseName={
+            drawer.franchise.name !== drawer.franchise.shortCode ? drawer.franchise.name : undefined
+          }
+          role={drawerPlayer.role}
           Batting={drawerPlayer.Batting}
           Bowling={drawerPlayer.Bowling}
           Fielding={drawerPlayer.Fielding}
