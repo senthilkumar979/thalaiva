@@ -51,6 +51,15 @@ export const CompetitionTeamPlayersDialog = ({
           return;
         }
         const data = await r.json();
+        data.sort((a: SubmittedPlayerRow, b: SubmittedPlayerRow) => {
+          if (a.isCaptain && !b.isCaptain) return -1;
+          if (!a.isCaptain && b.isCaptain) return 1;
+          if (a.isViceCaptain && !b.isViceCaptain) return -1;
+          if (!a.isViceCaptain && b.isViceCaptain) return 1;
+          if (a.role < b.role) return -1;
+          if (a.role > b.role) return 1;
+          return 0;
+        });
         setRows(Array.isArray(data) ? data : []);
       })
       .catch(() => setRows([]))
@@ -60,7 +69,7 @@ export const CompetitionTeamPlayersDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{teamName ?? "Team squad"}</DialogTitle>
           <DialogDescription>Player, role, IPL team, and points in this competition.</DialogDescription>

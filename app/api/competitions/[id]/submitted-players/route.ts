@@ -19,6 +19,12 @@ function tierPopulate(path: "tier1Players" | "tier2Players" | "tier3Players") {
   };
 }
 
+function refId(ref: unknown): string | null {
+  if (ref == null) return null;
+  if (typeof ref === "object" && "_id" in ref) return String((ref as { _id: unknown })._id);
+  return String(ref);
+}
+
 export async function GET(req: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
@@ -60,11 +66,24 @@ export async function GET(req: Request, { params }: RouteParams) {
         ? { _id: entryIdQ, competition: id }
         : { competition: id };
 
+    const captainPopulate = {
+      path: "captain",
+      select: "name role tier totalFantasyPoints",
+      populate: { path: "franchise", select: "name shortCode logoUrl" },
+    };
+    const viceCaptainPopulate = {
+      path: "viceCaptain",
+      select: "name role tier totalFantasyPoints",
+      populate: { path: "franchise", select: "name shortCode logoUrl" },
+    };
+
     const entries = await Entry.find(entryFilter)
-      .select("customTeamName tier1Players tier2Players tier3Players")
+      .select("customTeamName tier1Players tier2Players tier3Players captain viceCaptain")
       .populate(tierPopulate("tier1Players"))
       .populate(tierPopulate("tier2Players"))
       .populate(tierPopulate("tier3Players"))
+      .populate(captainPopulate)
+      .populate(viceCaptainPopulate)
       .lean();
 
     const scores = await CompetitionMatchScore.find({ competition: id }).select("entry playersWithPoints").lean();
@@ -104,11 +123,15 @@ export async function GET(req: Request, { params }: RouteParams) {
       franchiseShortCode: string;
       franchiseLogoUrl: string;
       pointsScored: number;
+      isCaptain: boolean;
+      isViceCaptain: boolean;
     }[] = [];
 
     for (const e of entries) {
       const eid = String(e._id);
       const teamName = e.customTeamName;
+      const captainId = refId(e.captain);
+      const viceCaptainId = refId(e.viceCaptain);
       const tiers = [e.tier1Players, e.tier2Players, e.tier3Players] as unknown as PopPlayer[][];
       for (const tier of tiers) {
         for (const pl of tier) {
@@ -126,6 +149,8 @@ export async function GET(req: Request, { params }: RouteParams) {
             franchiseShortCode: fr?.shortCode ?? "",
             franchiseLogoUrl: fr?.logoUrl ?? "",
             pointsScored: pointsByEntryPlayer.get(`${eid}:${pid}`) ?? 0,
+            isCaptain: captainId != null && pid === captainId,
+            isViceCaptain: viceCaptainId != null && pid === viceCaptainId,
           });
         }
       }

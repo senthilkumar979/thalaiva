@@ -1,5 +1,6 @@
-"use client";
+'use client'
 
+import { RoleIcon } from '@/components/RoleIcon'
 import {
   Table,
   TableBody,
@@ -7,30 +8,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { RoleIcon } from "@/components/RoleIcon";
+} from '@/components/ui/table'
+import { Crown, Shield } from 'lucide-react'
 
 export interface SubmittedPlayerRow {
-  entryId: string;
-  teamName: string;
-  playerId: string;
-  playerName: string;
-  role: string;
-  franchiseName: string;
-  franchiseShortCode: string;
-  franchiseLogoUrl: string;
-  pointsScored: number;
+  entryId: string
+  teamName: string
+  playerId: string
+  playerName: string
+  role: string
+  franchiseName: string
+  franchiseShortCode: string
+  franchiseLogoUrl: string
+  pointsScored: number
+  isCaptain?: boolean
+  isViceCaptain?: boolean
 }
 
 interface SubmittedPlayersTableProps {
-  rows: SubmittedPlayerRow[];
+  rows: SubmittedPlayerRow[]
   /** Hide fantasy team name in Team column (e.g. single-team dialog). */
-  variant?: "full" | "entryOnly";
+  variant?: 'full' | 'entryOnly'
 }
 
 export const SubmittedPlayersTable = ({
   rows,
-  variant = "full",
+  variant = 'full',
 }: SubmittedPlayersTableProps) => (
   <Table>
     <TableHeader>
@@ -44,7 +47,22 @@ export const SubmittedPlayersTable = ({
     <TableBody>
       {rows.map((r) => (
         <TableRow key={`${r.entryId}-${r.playerId}`}>
-          <TableCell className="font-medium">{r.playerName}</TableCell>
+          <TableCell className="font-medium">
+            <span className="inline-flex flex-wrap items-center gap-2">
+              {r.playerName}
+              {r.isCaptain ? (
+                <span className="rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                  <Crown className="inline size-3.5 text-slate-500" /> Captain
+                </span>
+              ) : null}
+              {r.isViceCaptain ? (
+                <span className="rounded-md bg-slate-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                  <Shield className="inline size-3.5 text-slate-500" /> Vice
+                  Captain
+                </span>
+              ) : null}
+            </span>
+          </TableCell>
           <TableCell>
             <span className="inline-flex items-center gap-2">
               <RoleIcon role={r.role} size="sm" />
@@ -68,14 +86,16 @@ export const SubmittedPlayersTable = ({
                 </span>
               )}
               <span>{r.franchiseName || r.franchiseShortCode}</span>
-              {variant === "full" ? (
+              {variant === 'full' ? (
                 <span className="text-muted-foreground">· {r.teamName}</span>
               ) : null}
             </span>
           </TableCell>
-          <TableCell className="text-right tabular-nums">{r.pointsScored}</TableCell>
+          <TableCell className="text-right tabular-nums">
+            {r.pointsScored}
+          </TableCell>
         </TableRow>
       ))}
     </TableBody>
   </Table>
-);
+)
