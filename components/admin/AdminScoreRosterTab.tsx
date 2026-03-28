@@ -1,6 +1,6 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { AdminScorePlayerAccordion } from "@/components/admin/AdminScorePlayerAccordion";
 import type { StatFormValues } from "@/components/AdminScorePlayerRow";
 import { emptyPlayerScoreStats } from "@/lib/adminScoreEmptyStats";
@@ -30,6 +30,15 @@ export const AdminScoreRosterTab = ({
   update,
   setParticipation,
 }: AdminScoreRosterTabProps) => {
+  const orderedList = useMemo(() => {
+    return [...list].sort((a, b) => {
+      const pa = participation[a._id] ?? false;
+      const pb = participation[b._id] ?? false;
+      if (pa !== pb) return pa ? -1 : 1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+  }, [list, participation]);
+
   if (list.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-white/20 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/65">
@@ -39,7 +48,7 @@ export const AdminScoreRosterTab = ({
   }
   return (
     <div className="space-y-3">
-      {list.map((p) => {
+      {orderedList.map((p) => {
         const row = rows[p._id] ?? emptyPlayerScoreStats(p._id);
         const franchiseLabel = p.franchise?.shortCode ?? p.franchise?.name ?? "—";
         const franchiseShortCode = p.franchise?.shortCode ?? "—";

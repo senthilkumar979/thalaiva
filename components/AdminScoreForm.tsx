@@ -1,17 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { AdminScoreRosterTab, type ScorePlayerLite } from "@/components/admin/AdminScoreRosterTab";
 import { AdminScoreTeamMatchTabs } from "@/components/admin/AdminScoreTeamMatchTabs";
 import { AdminScoreTotalsBar } from "@/components/admin/AdminScoreTotalsBar";
 import type { StatFormValues } from "@/components/AdminScorePlayerRow";
 import { Button } from "@/components/ui/button";
-import { statFormToPlayerMatchStats } from "@/lib/adminScoreToUpdatedStats";
 import { emptyPlayerScoreStats } from "@/lib/adminScoreEmptyStats";
+import { statFormToPlayerMatchStats } from "@/lib/adminScoreToUpdatedStats";
 import { calculateFantasyPoints } from "@/lib/updatedScoring";
 import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface MatchTeams {
   franchiseA: { _id: string; shortCode: string; name: string; logoUrl?: string };
@@ -191,9 +191,11 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
         }
       />
 
-      <Button type="button" onClick={submit} size="lg" className="w-full bg-primary font-semibold sm:w-auto hover:bg-primary/90">
+      <div className="flex justify-center items-center">
+      <Button type="button" onClick={submit} size="lg" className="w-full bg-yellow-500 border border-white/20 text-white font-semibold sm:w-auto hover:bg-yellow-500/40 hover:text-white ease-in-out duration-300 enabled:hover:bg-yellow-500/40 enabled:hover:text-white">
         Save match scores
-      </Button>
+        </Button>
+        </div>
     </div>
   );
 };

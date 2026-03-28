@@ -6,14 +6,7 @@ import { AdminScorePlayerRow, type StatFormValues } from "@/components/AdminScor
 import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
+import { AdminScorePointsBreakdownDrawer } from "@/components/admin/AdminScorePointsBreakdownDrawer";
 import {
   getIplRoleIconUrl,
   IPL_ROLE_ICON_SVG,
@@ -78,10 +71,36 @@ export const AdminScorePlayerAccordion = ({
       >
         <summary
           className={cn(
-            "flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 sm:px-5",
+            "flex cursor-pointer list-none items-center gap-2 px-3 py-3.5 sm:gap-3 sm:px-5",
             "[&::-webkit-details-marker]:hidden"
           )}
         >
+          <div
+            className="flex shrink-0 cursor-default flex-col gap-1 border-r border-white/10 pr-2 sm:pr-3"
+            role="presentation"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-2">
+              <input
+                id={`participated-${value.playerId}`}
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 rounded border-white/25 accent-emerald-400"
+                checked={participated}
+                onChange={(e) => onParticipationChange(e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <Label
+                htmlFor={`participated-${value.playerId}`}
+                className="cursor-pointer text-left text-[11px] font-semibold leading-snug text-white sm:text-xs"
+              >
+                <span className="block">Played in XI</span>
+                <span className="mt-0.5 block font-normal text-emerald-200/90">
+                  +{FANTASY_SCORING_POINT_VALUES.XI_PARTICIPATION} pts
+                </span>
+              </Label>
+            </div>
+          </div>
           <AdminScoreTeamLogo logoUrl={franchiseLogoUrl} shortCode={franchiseShortCode} size="sm" />
           <div className="min-w-0 flex-1 text-left">
             <div className="flex flex-wrap items-center gap-2">
@@ -132,21 +151,6 @@ export const AdminScorePlayerAccordion = ({
           />
         </summary>
         <div className="space-y-4 border-t border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent p-3 sm:p-4">
-          <div className="flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2.5">
-            <input
-              id={`participated-${value.playerId}`}
-              type="checkbox"
-              className="size-4 shrink-0 rounded border-white/25 accent-emerald-400"
-              checked={participated}
-              onChange={(e) => onParticipationChange(e.target.checked)}
-            />
-            <Label
-              htmlFor={`participated-${value.playerId}`}
-              className="cursor-pointer text-sm font-medium leading-none text-white"
-            >
-              Played in XI (+{FANTASY_SCORING_POINT_VALUES.XI_PARTICIPATION} pts)
-            </Label>
-          </div>
           {participated ? (
             <AdminScorePlayerRow
               name={name}
@@ -158,50 +162,21 @@ export const AdminScorePlayerAccordion = ({
             />
           ) : (
             <p className="rounded-xl border border-dashed border-white/20 bg-white/[0.03] px-3 py-4 text-center text-sm text-white/60">
-              Check &quot;Played in XI&quot; to enter batting, bowling, and fielding stats.
+              Turn on <span className="font-medium text-white/80">Played in XI</span> on the left to enter batting,
+              bowling, and fielding stats.
             </p>
           )}
         </div>
       </details>
 
-      <Dialog open={breakdownOpen} onOpenChange={setBreakdownOpen}>
-        <DialogContent
-          showCloseButton
-          className="fixed top-0 right-0 left-auto flex h-full max-h-[100dvh] max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-y-auto rounded-none rounded-l-xl border-l p-0 sm:max-w-md"
-        >
-          <DialogHeader className="border-b bg-muted/30 px-4 py-4 text-left">
-            <DialogTitle className="text-lg">Points breakdown</DialogTitle>
-            <DialogDescription className="text-left">{name}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 px-4 py-4 text-sm">
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Per current fantasy rules (same engine as competitions). Captain, vice-captain, and playoff multipliers
-              apply on entries only.
-            </p>
-            {lineItems.length === 0 ? (
-              <p className="text-muted-foreground">No line items (only base total).</p>
-            ) : (
-              <ul className="space-y-2">
-                {lineItems.map((row) => (
-                  <li key={row.label} className="flex justify-between gap-4 tabular-nums">
-                    <span className="text-foreground/90">{row.label}</span>
-                    <span className="font-medium text-foreground">+{row.points}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Separator />
-            <div className="flex justify-between gap-4 tabular-nums text-muted-foreground">
-              <span>Raw total</span>
-              <span className="font-medium text-foreground">{Number.isFinite(breakdown.rawTotal) ? breakdown.rawTotal : 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/40 px-3 py-2 font-semibold tabular-nums">
-              <span>Final score</span>
-              <span>{displayPoints}</span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AdminScorePointsBreakdownDrawer
+        open={breakdownOpen}
+        onOpenChange={setBreakdownOpen}
+        playerName={name}
+        lineItems={lineItems}
+        rawTotal={Number.isFinite(breakdown.rawTotal) ? breakdown.rawTotal : 0}
+        finalScore={displayPoints}
+      />
     </>
   );
 };
