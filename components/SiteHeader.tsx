@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -37,8 +38,15 @@ export const SiteHeader = () => {
           href="/"
           className="group flex min-w-0 shrink-0 items-center gap-2 rounded-lg outline-none ring-offset-[#071229] transition hover:opacity-95 focus-visible:ring-2 focus-visible:ring-amber-400/80 sm:gap-2.5"
         >
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/[0.14] sm:size-9">
-            <Trophy className="size-3.5 text-amber-300 sm:size-4" aria-hidden />
+          <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/[0.14] sm:size-10">
+            <Image
+              src="/thalaiva-logo.png"
+              alt="Thalaiva IPL Fantasy League"
+              width={80}
+              height={80}
+              className="size-full object-contain p-0.5"
+              priority
+            />
           </span>
           <span className="truncate text-[15px] font-semibold tracking-tight sm:text-[17px]">
             Thalaiva

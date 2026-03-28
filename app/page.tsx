@@ -1,14 +1,7 @@
-import Link from 'next/link'
-import {
-  ArrowRight,
-  Crown,
-  Layers,
-  Sparkles,
-  Trophy,
-  Users,
-} from 'lucide-react'
 import { HomeHeroPrimaryActions } from '@/components/HomeHeroPrimaryActions'
-
+import { ArrowRight, Crown, Layers, Sparkles, Users } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 const features = [
@@ -71,10 +64,17 @@ export default function HomePage() {
           </div>
 
           <div
-            className="pointer-events-none absolute bottom-8 right-8 hidden opacity-[0.12] lg:block"
+            className="pointer-events-none absolute bottom-8 right-8 hidden lg:block"
             aria-hidden
           >
-            <Trophy className="size-40 text-white" strokeWidth={1} />
+            <Image
+              src="/thalaiva-logo.png"
+              alt="Thalaiva IPL Fantasy League"
+              width={200}
+              height={200}
+              className="size-full object-contain"
+              priority
+            />
           </div>
         </div>
       </section>
