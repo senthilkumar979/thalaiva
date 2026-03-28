@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { UserPlus } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { AddPlayerPoolFormFields } from "@/components/players/AddPlayerPoolFormFields";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,6 +26,7 @@ export const AddPlayerToPoolForm = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [franchises, setFranchises] = useState<FranchiseOption[]>([]);
+  const [franchisesLoading, setFranchisesLoading] = useState(true);
 
   const {
     register,
@@ -43,13 +44,33 @@ export const AddPlayerToPoolForm = () => {
   });
 
   useEffect(() => {
+    let cancelled = false;
+    setFranchisesLoading(true);
     fetch("/api/franchises")
-      .then((r) => r.json())
-      .then((rows: FranchiseOption[]) => setFranchises(Array.isArray(rows) ? rows : []))
-      .catch(() => setFranchises([]));
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: FranchiseOption[]) => {
+        if (!cancelled) setFranchises(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (!cancelled) setFranchises([]);
+      })
+      .finally(() => {
+        if (!cancelled) setFranchisesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (status === "loading") return null;
+  if (status === "loading") {
+    return (
+      <Card className="border-border/80 shadow-sm">
+        <CardContent className="flex min-h-[200px] items-center justify-center py-12">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+        </CardContent>
+      </Card>
+    );
+  }
   if (session?.user?.role !== "admin") return null;
 
   const onSubmit = async (values: PlayerCreateFormValues) => {
@@ -85,14 +106,20 @@ export const AddPlayerToPoolForm = () => {
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-          <AddPlayerPoolFormFields
-            register={register}
-            errors={errors}
-            franchises={franchises}
-            isSubmitting={isSubmitting}
-          />
-        </form>
+        {franchisesLoading ? (
+          <div className="flex min-h-[180px] items-center justify-center">
+            <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <AddPlayerPoolFormFields
+              register={register}
+              errors={errors}
+              franchises={franchises}
+              isSubmitting={isSubmitting}
+            />
+          </form>
+        )}
       </CardContent>
     </Card>
   );

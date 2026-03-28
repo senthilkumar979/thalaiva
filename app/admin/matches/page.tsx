@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Loader2 } from "lucide-react";
 import { AdminCreateMatchPanel } from "@/components/admin/AdminCreateMatchPanel";
 import { AdminEditMatchDialog } from "@/components/admin/AdminEditMatchDialog";
 import { AdminMatchScheduleList, type AdminMatchRow } from "@/components/admin/AdminMatchScheduleList";
@@ -18,6 +18,8 @@ interface Franchise {
 export default function AdminMatchesPage() {
   const [matches, setMatches] = useState<AdminMatchRow[]>([]);
   const [franchises, setFranchises] = useState<Franchise[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<AdminMatchRow | null>(null);
   const [matchNumber, setMatchNumber] = useState(1);
@@ -27,14 +29,29 @@ export default function AdminMatchesPage() {
   const [when, setWhen] = useState("");
 
   useEffect(() => {
-    fetch("/api/matches")
-      .then((r) => r.json())
-      .then(setMatches)
-      .catch(() => undefined);
-    fetch("/api/franchises")
-      .then((r) => r.json())
-      .then(setFranchises)
-      .catch(() => undefined);
+    let cancelled = false;
+    setListLoading(true);
+    Promise.all([fetch("/api/matches"), fetch("/api/franchises")])
+      .then(async ([rm, rf]) => {
+        const m = rm.ok ? await rm.json() : [];
+        const f = rf.ok ? await rf.json() : [];
+        if (!cancelled) {
+          setMatches(Array.isArray(m) ? m : []);
+          setFranchises(Array.isArray(f) ? f : []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMatches([]);
+          setFranchises([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setListLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const resetCreateForm = () => {
@@ -46,27 +63,32 @@ export default function AdminMatchesPage() {
 
   const create = async () => {
     if (!fa || !fb || !when || (venue !== "home" && venue !== "away")) return;
-    const res = await fetch("/api/matches", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        matchNumber,
-        franchiseA: fa,
-        franchiseB: fb,
-        venue,
-        date: when,
-      }),
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      alert(err.error ?? "Could not create match");
-      return;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/matches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchNumber,
+          franchiseA: fa,
+          franchiseB: fb,
+          venue,
+          date: when,
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        alert(err.error ?? "Could not create match");
+        return;
+      }
+      const m = (await res.json()) as AdminMatchRow;
+      setMatches((prev) => [...prev, m]);
+      setMatchNumber(m.matchNumber + 1);
+      resetCreateForm();
+      setScheduleOpen(false);
+    } finally {
+      setCreating(false);
     }
-    const m = (await res.json()) as AdminMatchRow;
-    setMatches((prev) => [...prev, m]);
-    setMatchNumber(m.matchNumber + 1);
-    resetCreateForm();
-    setScheduleOpen(false);
   };
 
   const handleSaved = (updated: AdminMatchRow) => {
@@ -103,28 +125,37 @@ export default function AdminMatchesPage() {
         }
       />
 
-      {scheduleOpen ? (
-        <AdminCreateMatchPanel
-          franchises={franchises}
-          matchNumber={matchNumber}
-          onMatchNumberChange={setMatchNumber}
-          franchiseA={fa}
-          onFranchiseAChange={setFa}
-          franchiseB={fb}
-          onFranchiseBChange={setFb}
-          venue={venue}
-          onVenueChange={setVenue}
-          when={when}
-          onWhenChange={setWhen}
-          onSubmit={create}
-          onCancel={() => {
-            setScheduleOpen(false);
-            resetCreateForm();
-          }}
-        />
-      ) : null}
+      {listLoading ? (
+        <div className="flex min-h-[36vh] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+          <Loader2 className="size-10 animate-spin text-white/50" aria-hidden />
+        </div>
+      ) : (
+        <>
+          {scheduleOpen ? (
+            <AdminCreateMatchPanel
+              franchises={franchises}
+              matchNumber={matchNumber}
+              onMatchNumberChange={setMatchNumber}
+              franchiseA={fa}
+              onFranchiseAChange={setFa}
+              franchiseB={fb}
+              onFranchiseBChange={setFb}
+              venue={venue}
+              onVenueChange={setVenue}
+              when={when}
+              onWhenChange={setWhen}
+              onSubmit={create}
+              isSubmitting={creating}
+              onCancel={() => {
+                setScheduleOpen(false);
+                resetCreateForm();
+              }}
+            />
+          ) : null}
 
-      <AdminMatchScheduleList matches={matches} onEdit={(m) => setEditingMatch(m)} />
+          <AdminMatchScheduleList matches={matches} onEdit={(m) => setEditingMatch(m)} />
+        </>
+      )}
 
       <AdminEditMatchDialog
         open={editingMatch !== null}

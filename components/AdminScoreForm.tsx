@@ -9,6 +9,7 @@ import { emptyPlayerScoreStats } from "@/lib/adminScoreEmptyStats";
 import { statFormToPlayerMatchStats } from "@/lib/adminScoreToUpdatedStats";
 import { calculateFantasyPoints } from "@/lib/updatedScoring";
 import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ interface AdminScoreFormProps {
 export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: AdminScoreFormProps) => {
   const [rows, setRows] = useState<Record<string, StatFormValues>>({});
   const [participation, setParticipation] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const byPlayer = new Map<string, HydratedPlayerMatchScore>();
@@ -125,27 +127,32 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
   );
 
   const submit = async () => {
-    const stats = players.map((p) => {
-      const row = rows[p._id] ?? emptyPlayerScoreStats(p._id);
-      return {
-        playerId: p._id,
-        participated: participation[p._id] ?? false,
-        Batting: row.Batting,
-        Bowling: row.Bowling,
-        Fielding: row.Fielding,
-      };
-    });
-    const res = await fetch(`/api/matches/${matchId}/score`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stats }),
-    });
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      toast.error(j.error ?? "Submit failed");
-      return;
+    setSaving(true);
+    try {
+      const stats = players.map((p) => {
+        const row = rows[p._id] ?? emptyPlayerScoreStats(p._id);
+        return {
+          playerId: p._id,
+          participated: participation[p._id] ?? false,
+          Batting: row.Batting,
+          Bowling: row.Bowling,
+          Fielding: row.Fielding,
+        };
+      });
+      const res = await fetch(`/api/matches/${matchId}/score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stats }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        toast.error(j.error ?? "Submit failed");
+        return;
+      }
+      toast.success("Scores saved");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Scores saved");
   };
 
   return (
@@ -192,10 +199,23 @@ export const AdminScoreForm = ({ matchId, players, matchTeams, initialScores }: 
       />
 
       <div className="flex justify-center items-center">
-      <Button type="button" onClick={submit} size="lg" className="w-full bg-yellow-500 border border-white/20 text-white font-semibold sm:w-auto hover:bg-yellow-500/40 hover:text-white ease-in-out duration-300 enabled:hover:bg-yellow-500/40 enabled:hover:text-white">
-        Save match scores
+        <Button
+          type="button"
+          onClick={submit}
+          size="lg"
+          disabled={saving}
+          className="w-full bg-yellow-500 border border-white/20 text-white font-semibold sm:w-auto hover:bg-yellow-500/40 hover:text-white ease-in-out duration-300 enabled:hover:bg-yellow-500/40 enabled:hover:text-white"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+              Saving…
+            </>
+          ) : (
+            "Save match scores"
+          )}
         </Button>
-        </div>
+      </div>
     </div>
   );
 };

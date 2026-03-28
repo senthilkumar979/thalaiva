@@ -12,7 +12,11 @@ export async function GET(_req: Request, { params }: RouteParams) {
     const { id, matchId } = await params;
     await connectDb();
     const doc = await PlayerMatchScore.findOne({ player: id, match: matchId })
-      .populate({ path: "player", select: "name franchise tier role", populate: { path: "franchise", select: "shortCode name" } })
+      .populate({
+        path: "player",
+        select: "name franchise tier role",
+        populate: { path: "franchise", select: "shortCode name logoUrl" },
+      })
       .populate("match", "matchNumber date venue franchiseA franchiseB")
       .lean();
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });

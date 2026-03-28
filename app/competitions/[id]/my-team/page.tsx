@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { CompetitionMyTeamStrip } from "@/components/competitions/CompetitionMyTeamStrip";
 import { CompetitionSubpageShell } from "@/components/competitions/CompetitionSubpageShell";
 import { MyTeamMatchLogSection } from "@/components/competitions/MyTeamMatchLogSection";
+import { MyTeamPlayerMatchDrawer } from "@/components/competitions/MyTeamPlayerMatchDrawer";
 import { TeamBuilder } from "@/components/TeamBuilder";
 import { Button } from "@/components/ui/button";
 import { useMyTeamPageData } from "@/hooks/useMyTeamPageData";
@@ -15,11 +16,24 @@ import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
 
 export default function MyTeamMatchesPage() {
   const params = useParams();
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = String(params.id);
   const editParam = searchParams.get("edit") === "1";
-  const { rows, comp, myEntry, myRank, ready, loadError, status } = useMyTeamPageData(id);
+  const playerFromQuery = searchParams.get("player");
+  const matchFromQuery = searchParams.get("match");
+  const playerDrawerOpen = Boolean(playerFromQuery && matchFromQuery);
+
+  const closePlayerDrawer = () => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("player");
+    next.delete("match");
+    const q = next.toString();
+    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+  };
+  const { rows, matchesLoading, comp, myEntry, myRank, ready, loadError, status } =
+    useMyTeamPageData(id);
 
   const entriesClosed =
     comp != null ? areCompetitionEntriesClosed(comp.entriesFrozen, comp.entryDeadline) : false;
@@ -86,7 +100,8 @@ export default function MyTeamMatchesPage() {
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">My team & matches</h1>
               <p className="max-w-2xl text-sm leading-relaxed text-white/65">
-                Points and ranks update after each scored match. Tap a match for player-level breakdown.
+                Every fixture is listed — including not-yet-scored games. Expand a match to see your fantasy
+                points by player (after scoring).
               </p>
             </div>
             {entriesOpen && hasTeam && (
@@ -145,7 +160,12 @@ export default function MyTeamMatchesPage() {
           />
         )}
 
-        <MyTeamMatchLogSection competitionId={id} rows={rows} />
+        <MyTeamMatchLogSection
+          competitionId={id}
+          rows={rows}
+          hasTeam={hasTeam}
+          matchesLoading={matchesLoading}
+        />
 
         <Link
           href={`/competitions/${id}`}
@@ -154,6 +174,15 @@ export default function MyTeamMatchesPage() {
           ← Back to competition
         </Link>
       </div>
+
+      <MyTeamPlayerMatchDrawer
+        open={playerDrawerOpen}
+        onOpenChange={(open) => {
+          if (!open) closePlayerDrawer();
+        }}
+        playerId={playerFromQuery}
+        matchId={matchFromQuery}
+      />
     </CompetitionSubpageShell>
   );
 }

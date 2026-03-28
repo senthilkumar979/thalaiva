@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { buildMyTeamMatchRows } from "@/lib/myTeamMatchRows";
 import { requireUser } from "@/lib/session";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
 import { Entry } from "@/models/Entry";
+import { Match } from "@/models/Match";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -15,26 +17,43 @@ export async function GET(_req: Request, { params }: RouteParams) {
     await connectDb();
     const entry = await Entry.findOne({ competition: id, user: session.user.id }).lean();
     if (!entry) return NextResponse.json({ error: "No entry" }, { status: 404 });
-    const cms = await CompetitionMatchScore.find({ competition: id, entry: entry._id })
-      .populate("match", "matchNumber date venue franchiseA franchiseB isScored")
+
+    const allMatches = await Match.find({})
+      .sort({ date: 1 })
+      .populate("franchiseA", "shortCode name")
+      .populate("franchiseB", "shortCode name")
       .lean();
-    const sorted = cms
-      .filter((row) => row.match && typeof row.match === "object" && "date" in row.match)
-      .sort((a, b) => {
-        const ma = a.match as unknown as { date: string };
-        const mb = b.match as unknown as { date: string };
-        return new Date(ma.date).getTime() - new Date(mb.date).getTime();
-      });
-    let cumulative = 0;
-    const out = sorted.map((row) => {
-      cumulative += row.totalPointsThisMatch;
-      return {
-        match: row.match,
+
+    const cmsList = await CompetitionMatchScore.find({ competition: id, entry: entry._id })
+      .populate({
+        path: "playersWithPoints.player",
+        select: "name franchise tier role",
+        populate: { path: "franchise", select: "shortCode name" },
+      })
+      .lean();
+
+    const cmsByMatch = new Map<
+      string,
+      {
+        totalPointsThisMatch: number;
+        rankThisMatch: number;
+        playersWithPoints: {
+          player: unknown;
+          isCaptain: boolean;
+          rawPoints: number;
+          captainMultiplied: number;
+        }[];
+      }
+    >();
+    for (const row of cmsList) {
+      cmsByMatch.set(String(row.match), {
         totalPointsThisMatch: row.totalPointsThisMatch,
         rankThisMatch: row.rankThisMatch,
-        cumulative,
-      };
-    });
+        playersWithPoints: row.playersWithPoints ?? [],
+      });
+    }
+
+    const out = buildMyTeamMatchRows(allMatches, cmsByMatch);
     return NextResponse.json(out);
   } catch (e) {
     const err = e as Error & { status?: number };

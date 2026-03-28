@@ -1,18 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import type { LeaderboardRow } from "@/components/LeaderboardTable";
+import type { MyTeamMatchRow } from "@/lib/myTeamMatchRows";
 
-export interface MyTeamMatchRow {
-  match: {
-    _id: string;
-    matchNumber: number;
-    date: string;
-    venue: string;
-  };
-  totalPointsThisMatch: number;
-  rankThisMatch: number;
-  cumulative: number;
-}
+export type { MyTeamMatchRow } from "@/lib/myTeamMatchRows";
 
 interface CompetitionLite {
   name?: string;
@@ -28,6 +19,7 @@ interface MyEntry {
 export function useMyTeamPageData(competitionId: string) {
   const { data: session, status } = useSession();
   const [rows, setRows] = useState<MyTeamMatchRow[]>([]);
+  const [matchesLoading, setMatchesLoading] = useState(false);
   const [comp, setComp] = useState<CompetitionLite | null>(null);
   const [myEntry, setMyEntry] = useState<MyEntry | null>(null);
   const [myRank, setMyRank] = useState<number | null>(null);
@@ -89,17 +81,34 @@ export function useMyTeamPageData(competitionId: string) {
   }, [competitionId, status, comp, session?.user?.email]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated") {
+      setMatchesLoading(false);
+      setRows([]);
+      return;
+    }
+    let cancelled = false;
+    setMatchesLoading(true);
     fetch(`/api/competitions/${competitionId}/entries/me/matches`)
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json();
+        if (cancelled) return;
         if (Array.isArray(data)) setRows(data);
+        else setRows([]);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setMatchesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [competitionId, status]);
 
   return {
     rows,
+    matchesLoading,
     comp,
     myEntry,
     myRank,

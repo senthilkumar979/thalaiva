@@ -16,8 +16,9 @@ interface AdminCreateMatchPanelProps {
   onVenueChange: (v: string) => void;
   when: string;
   onWhenChange: (v: string) => void;
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 export const AdminCreateMatchPanel = (props: AdminCreateMatchPanelProps) => (
