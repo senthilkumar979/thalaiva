@@ -75,5 +75,11 @@ EntrySchema.pre("save", async function () {
   }
 });
 
+// Next.js dev hot reload can cache a stale model without newer paths (e.g. viceCaptain),
+// which makes populate() throw StrictPopulateError. Re-register in development.
+if (process.env.NODE_ENV !== "production" && mongoose.models.Entry) {
+  delete mongoose.models.Entry;
+}
+
 export const Entry: Model<IEntry> =
   mongoose.models.Entry ?? mongoose.model<IEntry>("Entry", EntrySchema);

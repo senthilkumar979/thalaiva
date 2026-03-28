@@ -97,18 +97,9 @@ export default function CompetitionDetailPage() {
       return
     }
     fetch(`/api/competitions/${id}/entries/me`)
-      .then((r) => {
-        console.log("Fetched /entries/me response:", r);
-        return r.ok ? r.json() : null
-      })
-      .then((e) => {
-        console.log("Parsed /entries/me team entry:", e);
-        setMine(e && e.customTeamName ? e : null)
-      })
-      .catch((err) => {
-        console.error("Error fetching /entries/me:", err);
-        setMine(null)
-      })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((e) => setMine(e && e.customTeamName ? e : null))
+      .catch(() => setMine(null))
   }, [id, session?.user])
 
   const refreshCompetition = () => {
