@@ -104,7 +104,6 @@ export function useMyTeamPageData(competitionId: string) {
       .then(async (r) => {
         const data = await r.json();
         if (cancelled) return;
-        console.log("data", data)
         if (Array.isArray(data)) setRows(data);
         else setRows([]);
       })

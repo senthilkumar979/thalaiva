@@ -69,7 +69,6 @@ export const CompetitionTeamPlayersDialog = ({
         }
         const data = await r.json();
         data.sort((a: SubmittedPlayerRow, b: SubmittedPlayerRow) => {
-          console.log(a, b);
           if (a.isCaptain && !b.isCaptain) return -1;
           if (!a.isCaptain && b.isCaptain) return 1;
           if (a.isViceCaptain && !b.isViceCaptain) return -1;

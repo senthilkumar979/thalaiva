@@ -82,7 +82,6 @@ export function calculateFantasyPointsWithBreakdown(
   }
 
   const total = breakdown.reduce((s, x) => s + x.points, 0);
-  console.log("calculateFantasyPointsWithBreakdown", total, breakdown);
   return { total, breakdown };
 }
 
@@ -156,7 +155,6 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
     else if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
   }
   const fielding = f.catches * P.PER_CATCH + f.stumpings * P.PER_STUMPING + f.runOuts * P.PER_DIRECT_RUNOUT;
-  console.log("sectionFantasyPoints", batting, bowling, fielding);
   return { batting, bowling, fielding };
 }
 
