@@ -1,4 +1,5 @@
 import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
+import { FANTASY_SCORING_POINT_VALUES as P } from "@/lib/updatedScoring";
 
 export interface IPlayerMatchScoreInput {
   Batting: IBattingStats;
@@ -43,12 +44,10 @@ export function calculateFantasyPointsWithBreakdown(
   const sixPts = b.sixes * 6;
   addBreakdown(breakdown, "Sixes", sixPts);
 
-  if (b.runs >= 100) {
-    addBreakdown(breakdown, "100-run milestone", 40);
-    addBreakdown(breakdown, "50-run milestone", 20);
-  } else if (b.runs >= 50) {
-    addBreakdown(breakdown, "50-run milestone", 20);
-  }
+  /** Run milestones stack: 30+, 50+, and 100+ tiers all apply when thresholds are met. */
+  if (b.runs >= 30) addBreakdown(breakdown, "30-run milestone", P.MILESTONE_30);
+  if (b.runs >= 50) addBreakdown(breakdown, "50-run milestone", P.MILESTONE_50);
+  if (b.runs >= 100) addBreakdown(breakdown, "100-run milestone", P.MILESTONE_100);
 
   if (b.isOut && b.runs === 0) {
     addBreakdown(breakdown, "Duck", -5);
@@ -60,8 +59,10 @@ export function calculateFantasyPointsWithBreakdown(
   addBreakdown(breakdown, "Maiden overs", bw.maidenOvers * 10);
   addBreakdown(breakdown, "Dot balls", bw.dotBalls * 4);
 
-  if (bw.wickets >= 5) addBreakdown(breakdown, "5-wicket haul", 20);
-  else if (bw.wickets >= 3) addBreakdown(breakdown, "3-wicket haul", 10);
+  /** Wicket haul bonuses stack: 3+, 5+, and 6+ tiers all apply when thresholds are met. */
+  if (bw.wickets >= 3) addBreakdown(breakdown, "3-wicket haul", P.HAUL_3W);
+  if (bw.wickets >= 5) addBreakdown(breakdown, "5-wicket haul", P.HAUL_5W);
+  if (bw.wickets >= 6) addBreakdown(breakdown, "6-wicket haul", P.HAUL_6W);
 
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
@@ -131,12 +132,9 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
   batting += b.runs * 1;
   batting += b.fours * 4;
   batting += b.sixes * 6;
-  if (b.runs >= 100) {
-    batting += 40;
-    batting += 20;
-  } else if (b.runs >= 50) {
-    batting += 20;
-  }
+  if (b.runs >= 30) batting += P.MILESTONE_30;
+  if (b.runs >= 50) batting += P.MILESTONE_50;
+  if (b.runs >= 100) batting += P.MILESTONE_100;
   if (b.isOut && b.runs === 0) batting -= 5;
   if (b.ballsFaced >= 10) {
     const sr = (b.runs / b.ballsFaced) * 100;
@@ -147,8 +145,9 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
   bowling += bw.wickets * 25;
   bowling += bw.maidenOvers * 10;
   bowling += bw.dotBalls * 4;
-  if (bw.wickets >= 5) bowling += 20;
-  else if (bw.wickets >= 3) bowling += 10;
+  if (bw.wickets >= 3) bowling += P.HAUL_3W;
+  if (bw.wickets >= 5) bowling += P.HAUL_5W;
+  if (bw.wickets >= 6) bowling += P.HAUL_6W;
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
@@ -163,8 +162,9 @@ const BATTING_BREAKDOWN_LABELS = new Set([
   "Runs",
   "Fours",
   "Sixes",
-  "100-run milestone",
+  "30-run milestone",
   "50-run milestone",
+  "100-run milestone",
   "Duck",
   "Strike rate bonus (>150)",
   "Strike rate bonus (130–150)",
@@ -174,8 +174,9 @@ const BOWLING_BREAKDOWN_LABELS = new Set([
   "Wickets",
   "Maiden overs",
   "Dot balls",
-  "5-wicket haul",
   "3-wicket haul",
+  "5-wicket haul",
+  "6-wicket haul",
   "Economy bonus (<5)",
   "Economy bonus (5–6)",
 ]);
