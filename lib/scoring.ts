@@ -129,32 +129,32 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
   const bw = stats.Bowling;
   const f = stats.Fielding;
   let batting = 0;
-  batting += b.runs * 1;
-  batting += b.fours * 4;
-  batting += b.sixes * 6;
+  batting += b.runs * P.PER_RUN;
+  batting += b.fours * P.PER_FOUR;
+  batting += b.sixes * P.PER_SIX;
   if (b.runs >= 30) batting += P.MILESTONE_30;
   if (b.runs >= 50) batting += P.MILESTONE_50;
   if (b.runs >= 100) batting += P.MILESTONE_100;
-  if (b.isOut && b.runs === 0) batting -= 5;
+  // if (b.isOut && b.runs === 0) batting -= 5;
   if (b.ballsFaced >= 10) {
     const sr = (b.runs / b.ballsFaced) * 100;
-    if (sr > 150) batting += 6;
-    else if (sr >= 130) batting += 4;
+    if (sr > P.STRIKE_RATE_THRESHOLD) batting += P.STRIKE_RATE_BONUS;
+    else if (sr >= P.STRIKE_RATE_THRESHOLD - 20) batting += P.STRIKE_RATE_BONUS;
   }
   let bowling = 0;
-  bowling += bw.wickets * 25;
-  bowling += bw.maidenOvers * 10;
-  bowling += bw.dotBalls * 4;
+  bowling += bw.wickets * P.PER_WICKET;
+  bowling += bw.maidenOvers * P.PER_MAIDEN;
+  bowling += bw.dotBalls * P.PER_DOT_BALL;
   if (bw.wickets >= 3) bowling += P.HAUL_3W;
   if (bw.wickets >= 5) bowling += P.HAUL_5W;
   if (bw.wickets >= 6) bowling += P.HAUL_6W;
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
-    if (economy < 5) bowling += 10;
-    else if (economy <= 6) bowling += 6;
+    if (economy < P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
+    else if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
   }
-  const fielding = f.catches * 10 + f.stumpings * 15 + f.runOuts * 10;
+  const fielding = f.catches * P.PER_CATCH + f.stumpings * P.PER_STUMPING + f.runOuts * P.PER_DIRECT_RUNOUT;
   return { batting, bowling, fielding };
 }
 
