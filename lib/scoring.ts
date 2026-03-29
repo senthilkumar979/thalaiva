@@ -1,5 +1,5 @@
-import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
 import { FANTASY_SCORING_POINT_VALUES as P } from "@/lib/updatedScoring";
+import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
 
 export interface IPlayerMatchScoreInput {
   Batting: IBattingStats;
@@ -67,8 +67,7 @@ export function calculateFantasyPointsWithBreakdown(
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
-    if (economy < P.ECONOMY_THRESHOLD) addBreakdown(breakdown, "Economy bonus (<5)", P.ECONOMY_BONUS);
-    else if (economy <= P.ECONOMY_THRESHOLD) addBreakdown(breakdown, "Economy bonus (5–6)", P.ECONOMY_BONUS);
+    if (economy < P.ECONOMY_THRESHOLD) addBreakdown(breakdown, "Economy bonus (<6)", P.ECONOMY_BONUS);
   }
 
   addBreakdown(breakdown, "Catches", f.catches * P.PER_CATCH);
@@ -77,8 +76,7 @@ export function calculateFantasyPointsWithBreakdown(
 
   if (b.ballsFaced >= 10) {
     const sr = (b.runs / b.ballsFaced) * 100;
-    if (sr > P.STRIKE_RATE_THRESHOLD) addBreakdown(breakdown, "Strike rate bonus (>150)", P.STRIKE_RATE_BONUS);
-    else if (sr >= P.STRIKE_RATE_THRESHOLD - 20) addBreakdown(breakdown, "Strike rate bonus (130–150)", P.STRIKE_RATE_BONUS);
+    if (sr > P.STRIKE_RATE_THRESHOLD) addBreakdown(breakdown, "Strike rate bonus (>200)", P.STRIKE_RATE_BONUS);
   }
 
   const total = breakdown.reduce((s, x) => s + x.points, 0);
@@ -151,8 +149,7 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
-    if (economy < P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
-    else if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
+    if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
   }
   const fielding = f.catches * P.PER_CATCH + f.stumpings * P.PER_STUMPING + f.runOuts * P.PER_DIRECT_RUNOUT;
   return { batting, bowling, fielding };
@@ -166,8 +163,7 @@ const BATTING_BREAKDOWN_LABELS = new Set([
   "50-run milestone",
   "100-run milestone",
   "Duck",
-  "Strike rate bonus (>150)",
-  "Strike rate bonus (130–150)",
+  "Strike rate bonus (>200)",
 ]);
 
 const BOWLING_BREAKDOWN_LABELS = new Set([
@@ -177,8 +173,7 @@ const BOWLING_BREAKDOWN_LABELS = new Set([
   "3-wicket haul",
   "5-wicket haul",
   "6-wicket haul",
-  "Economy bonus (<5)",
-  "Economy bonus (5–6)",
+  "Economy bonus (<6)",
 ]);
 
 const FIELDING_BREAKDOWN_LABELS = new Set(["Catches", "Stumpings", "Run-outs"]);
