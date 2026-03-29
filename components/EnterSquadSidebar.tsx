@@ -7,6 +7,7 @@ import { SquadCompositionPanel } from "@/components/SquadCompositionPanel";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import type { TierKey } from "@/hooks/useTeamBuilder";
 import type { SquadRoleCounts } from "@/lib/squadComposition";
+import { normalizePlayerId } from "@/lib/teamEntryHelpers";
 
 const ACCENT = "#19398a";
 
@@ -91,8 +92,10 @@ export const EnterSquadSidebar = ({
                     key={id}
                     player={pl}
                     showCaptain
-                    isCaptain={captain === id}
-                    isViceCaptain={viceCaptain === id}
+                    isCaptain={captain != null && normalizePlayerId(captain) === normalizePlayerId(id)}
+                    isViceCaptain={
+                      viceCaptain != null && normalizePlayerId(viceCaptain) === normalizePlayerId(id)
+                    }
                     onCaptain={() => onCaptain(id)}
                     onViceCaptain={() => onViceCaptain(id)}
                     onRemove={() => onRemove(t.key, id)}

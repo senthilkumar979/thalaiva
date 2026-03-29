@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
+import { normalizePlayerId } from "@/lib/teamEntryHelpers";
 
 export type TierKey = 1 | 3 | 5;
 
@@ -34,18 +35,19 @@ export function useTeamBuilder() {
     (tier: TierKey, player: PlayerWithFranchise, pool: PlayerWithFranchise[]) => {
       const [current, set] =
         tier === 1 ? [tier1, setTier1] : tier === 3 ? [tier2, setTier2] : [tier3, setTier3];
-      const pid = player._id;
-      if (current.includes(pid)) {
-        set(current.filter((x) => x !== pid));
-        setCaptain((c) => (c === pid ? null : c));
-        setViceCaptain((v) => (v === pid ? null : v));
+      const pid = normalizePlayerId(player._id);
+      const currentNorm = current.map((x) => normalizePlayerId(x));
+      if (currentNorm.includes(pid)) {
+        set(current.filter((x) => normalizePlayerId(x) !== pid));
+        setCaptain((c) => (c != null && normalizePlayerId(c) === pid ? null : c));
+        setViceCaptain((v) => (v != null && normalizePlayerId(v) === pid ? null : v));
         return;
       }
       if (current.length >= LIMIT) return;
       const key = playerFranchiseKey(player);
       const usedKeys = new Set(
         current.map((id) => {
-          const pl = pool.find((x) => x._id === id);
+          const pl = pool.find((x) => normalizePlayerId(x._id) === normalizePlayerId(id));
           return pl ? playerFranchiseKey(pl) : "";
         })
       );

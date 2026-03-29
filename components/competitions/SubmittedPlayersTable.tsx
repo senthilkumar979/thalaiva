@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Crown, Shield } from 'lucide-react'
+import { Badge } from '../ui/badge'
 
 export interface SubmittedPlayerRow {
   entryId: string
@@ -17,6 +18,7 @@ export interface SubmittedPlayerRow {
   playerId: string
   playerName: string
   role: string
+  tier: number
   franchiseName: string
   franchiseShortCode: string
   franchiseLogoUrl: string
@@ -26,9 +28,37 @@ export interface SubmittedPlayerRow {
 }
 
 interface SubmittedPlayersTableProps {
-  rows: SubmittedPlayerRow[]
+  rows: (SubmittedPlayerRow & { tier?: number })[]
   /** Hide fantasy team name in Team column (e.g. single-team dialog). */
   variant?: 'full' | 'entryOnly'
+}
+
+function getTierLabel(tier: number | string | undefined) {
+  if (!tier) return null
+  if (typeof tier === 'string') tier = parseInt(tier, 10)
+  if (tier === 1)
+    return (
+      <Badge className="rounded-full bg-amber-500/20 text-amber-700">
+        Tier 1
+      </Badge>
+    )
+  if (tier === 2)
+    return (
+      <Badge className="rounded-full bg-slate-500/20 text-slate-700">
+        Tier 2
+      </Badge>
+    )
+  if (tier === 3)
+    return (
+      <Badge className="rounded-full bg-emerald-500/20 text-emerald-700">
+        Tier 3
+      </Badge>
+    )
+  return (
+    <Badge className="rounded-full bg-gray-500/20 text-gray-700">
+      Tier {tier}
+    </Badge>
+  )
 }
 
 export const SubmittedPlayersTable = ({
@@ -41,6 +71,7 @@ export const SubmittedPlayersTable = ({
         <TableHead>Player</TableHead>
         <TableHead>Role</TableHead>
         <TableHead>Team</TableHead>
+        <TableHead>Tier</TableHead>
         <TableHead className="text-right">Pts</TableHead>
       </TableRow>
     </TableHeader>
@@ -91,8 +122,11 @@ export const SubmittedPlayersTable = ({
               ) : null}
             </span>
           </TableCell>
+          <TableCell>{getTierLabel(r.tier)}</TableCell>
           <TableCell className="text-right tabular-nums">
-            {r.pointsScored}
+            <Badge className="rounded-full bg-green-500/20 text-green-700">
+              <span className="text-green-700">{r.pointsScored}</span>
+            </Badge>
           </TableCell>
         </TableRow>
       ))}

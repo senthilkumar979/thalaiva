@@ -20,6 +20,7 @@ import {
   squadCompositionSatisfied,
   type RoleFilterValue,
 } from "@/lib/squadComposition";
+import { normalizePlayerId } from "@/lib/teamEntryHelpers";
 
 interface TeamBuilderProps {
   competitionId: string;
@@ -49,7 +50,9 @@ export const TeamBuilder = ({
 
   const playerById = useMemo(() => {
     const m = new Map<string, PlayerWithFranchise>();
-    for (const p of [...p1.players, ...p2.players, ...p3.players]) m.set(p._id, p);
+    for (const p of [...p1.players, ...p2.players, ...p3.players]) {
+      m.set(normalizePlayerId(p._id), p);
+    }
     return m;
   }, [p1.players, p2.players, p3.players]);
 
@@ -85,7 +88,10 @@ export const TeamBuilder = ({
     [tb.tier1, tb.tier2, tb.tier3]
   );
 
-  const compositionCounts = useMemo(() => countRolesFromIds(allIds, playerById), [allIds, playerById]);
+  const compositionCounts = useMemo(
+    () => countRolesFromIds(allIds.map((x) => normalizePlayerId(x)), playerById),
+    [allIds, playerById]
+  );
 
   const compositionOk = useMemo(
     () => (allIds.length === 15 ? squadCompositionSatisfied(compositionCounts) : false),
@@ -101,15 +107,17 @@ export const TeamBuilder = ({
     capPool: allIds,
   });
 
+  const selectedIdSet = useMemo(() => new Set(allIds.map((x) => normalizePlayerId(x))), [allIds]);
+
   const canSubmit =
     !entriesClosed &&
     compositionOk &&
     teamName.trim().length > 0 &&
     !!tb.captain &&
-    allIds.includes(tb.captain) &&
+    selectedIdSet.has(normalizePlayerId(tb.captain)) &&
     !!tb.viceCaptain &&
-    allIds.includes(tb.viceCaptain) &&
-    tb.captain !== tb.viceCaptain &&
+    selectedIdSet.has(normalizePlayerId(tb.viceCaptain)) &&
+    normalizePlayerId(tb.captain) !== normalizePlayerId(tb.viceCaptain) &&
     captainViceFranchisesOk;
 
   const handleTierToggle = useCallback(
@@ -119,7 +127,8 @@ export const TeamBuilder = ({
         (tier === 3 && tb.tier2.includes(player._id)) ||
         (tier === 5 && tb.tier3.includes(player._id));
       if (!inTier && player.role === "allrounder") {
-        const ar = allIds.filter((id) => playerById.get(id)?.role === "allrounder").length;
+        const ar = allIds.filter((pid) => playerById.get(normalizePlayerId(pid))?.role === "allrounder")
+          .length;
         if (ar >= 3) {
           toast.error("You can pick at most 3 all-rounders");
           return;
@@ -139,7 +148,10 @@ export const TeamBuilder = ({
       toast.error("Enter a squad name, captain (crown), and vice-captain (shield).");
       return;
     }
-    if (!allIds.includes(tb.captain) || !allIds.includes(tb.viceCaptain)) {
+    if (
+      !selectedIdSet.has(normalizePlayerId(tb.captain)) ||
+      !selectedIdSet.has(normalizePlayerId(tb.viceCaptain))
+    ) {
       toast.error("Captain and vice-captain must be among your 15 players.");
       return;
     }
@@ -171,7 +183,8 @@ export const TeamBuilder = ({
   const removePlayer = useCallback(
     (tier: TierKey, playerId: string) => {
       const pool = tier === 1 ? p1.players : tier === 3 ? p2.players : p3.players;
-      const pl = pool.find((x) => x._id === playerId);
+      const target = normalizePlayerId(playerId);
+      const pl = pool.find((x) => normalizePlayerId(x._id) === target);
       if (pl) tb.toggle(tier, pl, pool);
     },
     [p1.players, p2.players, p3.players, tb]

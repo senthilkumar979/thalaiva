@@ -3,6 +3,7 @@
 import { PlayerCard } from "@/components/PlayerCard";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
 import type { TierKey } from "@/hooks/useTeamBuilder";
+import { normalizePlayerId } from "@/lib/teamEntryHelpers";
 import { cn } from "@/lib/utils";
 
 interface TierColumnProps {
@@ -36,7 +37,7 @@ export const TierColumn = ({
 }: TierColumnProps) => {
   const selectedFranchises = new Set(
     selectedIds
-      .map((id) => franchisePool.find((p) => p._id === id))
+      .map((id) => franchisePool.find((p) => normalizePlayerId(p._id) === normalizePlayerId(id)))
       .filter(Boolean)
       .map((p) => franchiseKey(p as PlayerWithFranchise))
   );
@@ -66,7 +67,7 @@ export const TierColumn = ({
         )}
         {!isLoading &&
           players.map((p) => {
-            const sel = selectedIds.includes(p._id);
+            const sel = selectedIds.some((sid) => normalizePlayerId(sid) === normalizePlayerId(p._id));
             const key = franchiseKey(p);
             const blocked = !sel && selectedFranchises.has(key);
             return (

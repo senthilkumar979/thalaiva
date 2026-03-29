@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { PlayerWithFranchise } from "@/hooks/usePlayersByTier";
+import { normalizePlayerId } from "@/lib/teamEntryHelpers";
 import { playerFranchiseKey } from "@/hooks/useTeamBuilder";
 
 interface UseCaptainViceSelectionArgs {
@@ -24,41 +25,48 @@ export function useCaptainViceSelection({
 }: UseCaptainViceSelectionArgs) {
   const captainViceFranchisesOk = useMemo(() => {
     if (!captain || !viceCaptain) return false;
-    const c = playerById.get(captain);
-    const v = playerById.get(viceCaptain);
+    const c = playerById.get(normalizePlayerId(captain));
+    const v = playerById.get(normalizePlayerId(viceCaptain));
     if (!c || !v) return false;
     return playerFranchiseKey(c) !== playerFranchiseKey(v);
   }, [captain, viceCaptain, playerById]);
 
-  useEffect(() => {
-    if (captain && !capPool.includes(captain)) setCaptain(null);
-  }, [captain, capPool, setCaptain]);
+  const capPoolSet = useMemo(() => new Set(capPool.map((id) => normalizePlayerId(id))), [capPool]);
 
   useEffect(() => {
-    if (viceCaptain && !capPool.includes(viceCaptain)) setViceCaptain(null);
-  }, [viceCaptain, capPool, setViceCaptain]);
+    if (captain && !capPoolSet.has(normalizePlayerId(captain))) setCaptain(null);
+  }, [captain, capPoolSet, setCaptain]);
+
+  useEffect(() => {
+    if (viceCaptain && !capPoolSet.has(normalizePlayerId(viceCaptain))) setViceCaptain(null);
+  }, [viceCaptain, capPoolSet, setViceCaptain]);
 
   const onCaptain = useCallback(
     (id: string) => {
-      if (captain === id) return;
-      if (viceCaptain === id) {
+      const sid = normalizePlayerId(id);
+      if (captain != null && normalizePlayerId(captain) === sid) {
+        setCaptain(null);
+        return;
+      }
+      if (viceCaptain != null && normalizePlayerId(viceCaptain) === sid) {
         toast.error("That player is vice-captain — clear vice-captain first or pick another captain.");
         return;
       }
-      const c = playerById.get(id);
-      const v = viceCaptain ? playerById.get(viceCaptain) : null;
+      const c = playerById.get(sid);
+      const v = viceCaptain ? playerById.get(normalizePlayerId(viceCaptain)) : null;
       if (c && v && playerFranchiseKey(c) === playerFranchiseKey(v)) {
         toast.error("Captain must be from a different franchise than vice-captain.");
         return;
       }
-      setCaptain(id);
+      setCaptain(sid);
     },
     [captain, viceCaptain, playerById, setCaptain]
   );
 
   const onViceCaptain = useCallback(
     (id: string) => {
-      if (viceCaptain === id) {
+      const sid = normalizePlayerId(id);
+      if (viceCaptain != null && normalizePlayerId(viceCaptain) === sid) {
         setViceCaptain(null);
         return;
       }
@@ -66,17 +74,17 @@ export function useCaptainViceSelection({
         toast.error("Choose a captain first.");
         return;
       }
-      if (captain === id) {
+      if (normalizePlayerId(captain) === sid) {
         toast.error("Vice-captain cannot be the same player as captain.");
         return;
       }
-      const c = playerById.get(captain);
-      const v = playerById.get(id);
+      const c = playerById.get(normalizePlayerId(captain));
+      const v = playerById.get(sid);
       if (c && v && playerFranchiseKey(c) === playerFranchiseKey(v)) {
         toast.error("Vice-captain must be from a different franchise than the captain.");
         return;
       }
-      setViceCaptain(id);
+      setViceCaptain(sid);
     },
     [captain, viceCaptain, playerById, setViceCaptain]
   );

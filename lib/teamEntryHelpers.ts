@@ -1,17 +1,19 @@
+/** Stable string id for comparisons (API may return strings or populated `{ _id }`). */
+export function normalizePlayerId(value: unknown): string {
+  if (value == null || value === "") return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && "_id" in value) return String((value as { _id: unknown })._id);
+  return String(value);
+}
+
 export function playerIdListFromEntry(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value
-    .map((item) => {
-      if (typeof item === "string") return item;
-      if (item && typeof item === "object" && "_id" in item) return String((item as { _id: string })._id);
-      return "";
-    })
+    .map((item) => normalizePlayerId(item))
     .filter(Boolean);
 }
 
 export function captainIdFromEntry(value: unknown): string | null {
-  if (!value) return null;
-  if (typeof value === "string") return value;
-  if (typeof value === "object" && "_id" in value) return String((value as { _id: string })._id);
-  return null;
+  const id = normalizePlayerId(value);
+  return id || null;
 }
