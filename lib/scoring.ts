@@ -35,13 +35,13 @@ export function calculateFantasyPointsWithBreakdown(
   const breakdown: FantasyPointsBreakdown[] = [];
   const { Batting: b, Bowling: bw, Fielding: f } = stats;
 
-  const runPts = b.runs * 1;
+  const runPts = b.runs * P.PER_RUN;
   addBreakdown(breakdown, "Runs", runPts);
 
-  const fourPts = b.fours * 4;
+  const fourPts = b.fours * P.PER_FOUR;
   addBreakdown(breakdown, "Fours", fourPts);
 
-  const sixPts = b.sixes * 6;
+  const sixPts = b.sixes * P.PER_SIX;
   addBreakdown(breakdown, "Sixes", sixPts);
 
   /** Run milestones stack: 30+, 50+, and 100+ tiers all apply when thresholds are met. */
@@ -50,14 +50,14 @@ export function calculateFantasyPointsWithBreakdown(
   if (b.runs >= 100) addBreakdown(breakdown, "100-run milestone", P.MILESTONE_100);
 
   if (b.isOut && b.runs === 0) {
-    addBreakdown(breakdown, "Duck", -5);
+    // addBreakdown(breakdown, "Duck", -5);
   }
 
-  const wkPts = bw.wickets * 25;
+  const wkPts = bw.wickets * P.PER_WICKET;
   addBreakdown(breakdown, "Wickets", wkPts);
 
-  addBreakdown(breakdown, "Maiden overs", bw.maidenOvers * 10);
-  addBreakdown(breakdown, "Dot balls", bw.dotBalls * 4);
+  addBreakdown(breakdown, "Maiden overs", bw.maidenOvers * P.PER_MAIDEN);
+  addBreakdown(breakdown, "Dot balls", bw.dotBalls * P.PER_DOT_BALL);
 
   /** Wicket haul bonuses stack: 3+, 5+, and 6+ tiers all apply when thresholds are met. */
   if (bw.wickets >= 3) addBreakdown(breakdown, "3-wicket haul", P.HAUL_3W);
@@ -67,21 +67,22 @@ export function calculateFantasyPointsWithBreakdown(
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
-    if (economy < 5) addBreakdown(breakdown, "Economy bonus (<5)", 10);
-    else if (economy <= 6) addBreakdown(breakdown, "Economy bonus (5–6)", 6);
+    if (economy < P.ECONOMY_THRESHOLD) addBreakdown(breakdown, "Economy bonus (<5)", P.ECONOMY_BONUS);
+    else if (economy <= P.ECONOMY_THRESHOLD) addBreakdown(breakdown, "Economy bonus (5–6)", P.ECONOMY_BONUS);
   }
 
-  addBreakdown(breakdown, "Catches", f.catches * 10);
-  addBreakdown(breakdown, "Stumpings", f.stumpings * 15);
-  addBreakdown(breakdown, "Run-outs", f.runOuts * 10);
+  addBreakdown(breakdown, "Catches", f.catches * P.PER_CATCH);
+  addBreakdown(breakdown, "Stumpings", f.stumpings * P.PER_STUMPING);
+  addBreakdown(breakdown, "Run-outs", f.runOuts * P.PER_DIRECT_RUNOUT);
 
   if (b.ballsFaced >= 10) {
     const sr = (b.runs / b.ballsFaced) * 100;
-    if (sr > 150) addBreakdown(breakdown, "Strike rate bonus (>150)", 6);
-    else if (sr >= 130) addBreakdown(breakdown, "Strike rate bonus (130–150)", 4);
+    if (sr > P.STRIKE_RATE_THRESHOLD) addBreakdown(breakdown, "Strike rate bonus (>150)", P.STRIKE_RATE_BONUS);
+    else if (sr >= P.STRIKE_RATE_THRESHOLD - 20) addBreakdown(breakdown, "Strike rate bonus (130–150)", P.STRIKE_RATE_BONUS);
   }
 
   const total = breakdown.reduce((s, x) => s + x.points, 0);
+  console.log("calculateFantasyPointsWithBreakdown", total, breakdown);
   return { total, breakdown };
 }
 
@@ -155,6 +156,7 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
     else if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
   }
   const fielding = f.catches * P.PER_CATCH + f.stumpings * P.PER_STUMPING + f.runOuts * P.PER_DIRECT_RUNOUT;
+  console.log("sectionFantasyPoints", batting, bowling, fielding);
   return { batting, bowling, fielding };
 }
 
