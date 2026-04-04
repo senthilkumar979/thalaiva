@@ -74,6 +74,9 @@ export const CompetitionTeamPlayersDialog = ({
           if (a.isViceCaptain && !b.isViceCaptain) return -1;
           if (!a.isViceCaptain && b.isViceCaptain) return 1;
           if (a.tier < b.tier) return -1;
+          if (a.tier > b.tier) return 1;
+          if (a.pointsScored > b.pointsScored) return -1;
+          if (a.pointsScored < b.pointsScored) return 1;
           return 0;
         });
         const withTiers = addTierToRows(Array.isArray(data) ? data : []);
