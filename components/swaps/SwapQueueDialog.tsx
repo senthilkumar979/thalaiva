@@ -2,55 +2,31 @@
 
 import { SwapQueueConfirmDialog } from "@/components/swaps/SwapQueueConfirmDialog";
 import { SwapQueueRulesCallout } from "@/components/swaps/SwapQueueRulesCallout";
-import {
-  labelForPlayerId,
-  type PlayerOptionNorm,
-} from "@/components/swaps/swapSelectLabels";
+import { labelForPlayerId } from "@/components/swaps/swapSelectLabels";
 import { SwapTierColumn } from "@/components/swaps/SwapTierColumn";
 import { Button } from "@/components/ui/button";
-import type { SwapEligibility } from "@/hooks/useSwapEligibility";
-import { useSwapQueue, type SwapQueueEntry } from "@/hooks/useSwapQueue";
+import { useSwapQueue } from "@/hooks/useSwapQueue";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+export type SwapQueueController = ReturnType<typeof useSwapQueue>;
+
 interface SwapQueueBoardProps {
-  competitionId: string;
-  entry: SwapQueueEntry;
-  eligibility: SwapEligibility;
-  squad: PlayerOptionNorm[];
-  newCaptainId: string;
-  newViceCaptainId: string;
-  onSuccess: () => void;
+  swapQueue: SwapQueueController;
 }
 
-export const SwapQueueBoard = ({
-  competitionId,
-  entry,
-  eligibility,
-  squad,
-  newCaptainId,
-  newViceCaptainId,
-  onSuccess,
-}: SwapQueueBoardProps) => {
-  const q = useSwapQueue({
-    competitionId,
-    entry,
-    eligibility,
-    newCaptainId,
-    newViceCaptainId,
-    onSuccess,
-  });
+export const SwapQueueBoard = ({ swapQueue: q }: SwapQueueBoardProps) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const leadershipSummary = useMemo(() => {
-    if (newCaptainId?.trim()) {
-      return `Change captain to ${labelForPlayerId(newCaptainId, squad) ?? "selected player"}`;
+    if (q.newCaptainId?.trim()) {
+      return `Change captain to ${labelForPlayerId(q.newCaptainId, q.effectiveSquadForLeadership) ?? "selected player"}`;
     }
-    if (newViceCaptainId?.trim()) {
-      return `Change vice-captain to ${labelForPlayerId(newViceCaptainId, squad) ?? "selected player"}`;
+    if (q.newViceCaptainId?.trim()) {
+      return `Change vice-captain to ${labelForPlayerId(q.newViceCaptainId, q.effectiveSquadForLeadership) ?? "selected player"}`;
     }
     return null;
-  }, [newCaptainId, newViceCaptainId, squad]);
+  }, [q.newCaptainId, q.newViceCaptainId, q.effectiveSquadForLeadership]);
 
   const handleReviewClick = async () => {
     const ok = await q.validateForConfirm();
@@ -72,7 +48,7 @@ export const SwapQueueBoard = ({
         </p>
       </div>
 
-      <SwapQueueRulesCallout eligibility={eligibility} />
+      <SwapQueueRulesCallout eligibility={q.eligibility} />
 
       {q.error && <div className="bg-red-500/20 p-3 rounded-lg border border-red-500/50">
         <p className="text-sm text-red-500 font-bold">{q.error}</p> </div>}
@@ -81,7 +57,7 @@ export const SwapQueueBoard = ({
         {([1, 2, 3] as const).map((slot) => {
           const rows = q.pendingWithIndex.filter((x) => x.row.tierSlot === slot);
           const queuedInTier = q.pending.filter((p) => p.tierSlot === slot).length;
-          const swapsLeftInTier = eligibility.tierRemaining[slot] - queuedInTier;
+          const swapsLeftInTier = q.eligibility.tierRemaining[slot] - queuedInTier;
           return (
             <SwapTierColumn
               key={slot}

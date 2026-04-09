@@ -6,6 +6,7 @@ import {
   type PlayerOptionNorm,
 } from "@/components/swaps/swapSelectLabels";
 import type { SwapEligibility } from "@/hooks/useSwapEligibility";
+import { buildEffectiveSquadAfterPendingSwaps } from "@/lib/swapEffectiveSquad";
 import {
   leadershipPenaltyPoints,
   playerSwapPenaltyForTierSlot,
@@ -296,6 +297,12 @@ export function useSwapQueue({
     [pending]
   );
 
+  const effectiveSquadForLeadership = useMemo(
+    () =>
+      buildEffectiveSquadAfterPendingSwaps(squadNormByTier, pending, pools),
+    [squadNormByTier, pending, pools]
+  );
+
   return {
     draft,
     setDraftTier,
@@ -317,5 +324,9 @@ export function useSwapQueue({
     playerPenaltyTotal,
     leadershipPenalty: leadershipPreviewPenalty,
     removePending,
+    effectiveSquadForLeadership,
+    newCaptainId,
+    newViceCaptainId,
+    eligibility,
   };
 }

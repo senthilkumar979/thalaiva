@@ -5,25 +5,27 @@ import { CompetitionSubpageShell } from '@/components/competitions/CompetitionSu
 import { SwapAuditTable } from '@/components/swaps/SwapAuditTable'
 import { SwapEntryActions } from '@/components/swaps/SwapEntryActions'
 import { SwapQueueBoard } from '@/components/swaps/SwapQueueDialog'
-import { normalizePlayerId } from '@/components/swaps/swapSelectLabels'
 import { SwapStatusCard } from '@/components/swaps/SwapStatusCard'
+import type { SwapEligibility } from '@/hooks/useSwapEligibility'
 import { useSwapEligibility } from '@/hooks/useSwapEligibility'
-import type { SwapQueueEntry } from '@/hooks/useSwapQueue'
+import { useSwapQueue, type SwapQueueEntry } from '@/hooks/useSwapQueue'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface SwapPageClientProps {
   competitionId: string
 }
 
-export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
-  const {
-    data: eligibility,
-    loading: elLoading,
-    error: elError,
-    refetch: refetchEligibility,
-  } = useSwapEligibility(competitionId)
+function SwapPageContent({
+  competitionId,
+  eligibility,
+  refetchEligibility,
+}: {
+  competitionId: string
+  eligibility: SwapEligibility
+  refetchEligibility: () => void
+}) {
   const [entry, setEntry] = useState<Record<string, unknown> | null>(null)
   const [auditRows, setAuditRows] = useState<unknown[]>([])
   const [compName, setCompName] = useState<string>('League')
@@ -54,68 +56,17 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
     refresh()
   }, [refresh])
 
-  const squad = useMemo(() => {
-    if (!entry) return []
-    const rows = [
-      ...((entry.tier1Players as {
-        _id: unknown
-        name: string
-        role: string
-        franchise: {
-          _id: string
-          name: string
-          shortCode: string
-          logoUrl: string
-        }
-      }[]) ?? []),
-      ...((entry.tier2Players as {
-        _id: unknown
-        name: string
-        role: string
-        franchise: {
-          _id: string
-          name: string
-          shortCode: string
-          logoUrl: string
-        }
-      }[]) ?? []),
-      ...((entry.tier3Players as {
-        _id: unknown
-        name: string
-        role: string
-        franchise: {
-          _id: string
-          name: string
-          shortCode: string
-          logoUrl: string
-        }
-      }[]) ?? []),
-    ]
-    return rows.map((p) => ({
-      name: p.name,
-      _id: normalizePlayerId(p._id),
-      franchise: p.franchise,
-      role: p.role,
-    }))
-  }, [entry])
-
-  if (elLoading || !eligibility) {
-    return (
-      <CompetitionSubpageShell>
-        <div className="flex min-h-[40vh] items-center justify-center text-white/80">
-          <Loader2 className="size-8 animate-spin" />
-        </div>
-      </CompetitionSubpageShell>
-    )
-  }
-
-  if (elError) {
-    return (
-      <CompetitionSubpageShell>
-        <p className="py-12 text-center text-sm text-red-300">{elError}</p>
-      </CompetitionSubpageShell>
-    )
-  }
+  const swapQueue = useSwapQueue({
+    competitionId,
+    entry: entry as SwapQueueEntry | null,
+    eligibility,
+    newCaptainId,
+    newViceCaptainId,
+    onSuccess: () => {
+      refresh()
+      refetchEligibility()
+    },
+  })
 
   return (
     <CompetitionSubpageShell>
@@ -152,7 +103,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
           competitionId={competitionId}
           entry={entry}
           eligibility={eligibility}
-          squad={squad}
+          squad={swapQueue.effectiveSquadForLeadership}
           newCaptainId={newCaptainId}
           newViceCaptainId={newViceCaptainId}
           onCaptainChange={(v) => {
@@ -166,18 +117,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
         />
 
         {entry && eligibility.canSwap ? (
-          <SwapQueueBoard
-            competitionId={competitionId}
-            entry={(entry as unknown) as SwapQueueEntry}
-            eligibility={eligibility}
-            squad={squad}
-            newCaptainId={newCaptainId}
-            newViceCaptainId={newViceCaptainId}
-            onSuccess={() => {
-              refresh()
-              refetchEligibility()
-            }}
-          />
+          <SwapQueueBoard swapQueue={swapQueue} />
         ) : null}
 
         <section className="space-y-3">
@@ -193,5 +133,40 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
         </Link>
       </div>
     </CompetitionSubpageShell>
+  )
+}
+
+export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
+  const {
+    data: eligibility,
+    loading: elLoading,
+    error: elError,
+    refetch: refetchEligibility,
+  } = useSwapEligibility(competitionId)
+
+  if (elLoading || !eligibility) {
+    return (
+      <CompetitionSubpageShell>
+        <div className="flex min-h-[40vh] items-center justify-center text-white/80">
+          <Loader2 className="size-8 animate-spin" />
+        </div>
+      </CompetitionSubpageShell>
+    )
+  }
+
+  if (elError) {
+    return (
+      <CompetitionSubpageShell>
+        <p className="py-12 text-center text-sm text-red-300">{elError}</p>
+      </CompetitionSubpageShell>
+    )
+  }
+
+  return (
+    <SwapPageContent
+      competitionId={competitionId}
+      eligibility={eligibility}
+      refetchEligibility={refetchEligibility}
+    />
   )
 }
