@@ -1,166 +1,145 @@
-import Link from "next/link";
-import { ArrowUpRight, Calendar, Home, MapPin, Pencil, Plane } from "lucide-react";
-import { AdminScoreTeamLogo } from "@/components/admin/AdminScoreTeamLogo";
-import { Button } from "@/components/ui/button";
-import { formatVenueLabel } from "@/lib/matchVenue";
-import { cn } from "@/lib/utils";
+'use client'
 
-interface Franchise {
-  _id: string;
-  name: string;
-  shortCode: string;
-  logoUrl?: string;
-}
+import { useMemo } from 'react'
+import { AdminMatchFixtureRow } from '@/components/admin/AdminMatchFixtureRow'
+import type { AdminMatchRow } from '@/components/admin/adminMatchTypes'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
-export interface AdminMatchRow {
-  _id: string;
-  matchNumber: number;
-  date: string;
-  venue: string;
-  isScored: boolean;
-  franchiseA: Franchise;
-  franchiseB: Franchise;
-}
+export type { AdminMatchRow } from '@/components/admin/adminMatchTypes'
 
 interface AdminMatchScheduleListProps {
-  matches: AdminMatchRow[];
-  onEdit?: (m: AdminMatchRow) => void;
+  matches: AdminMatchRow[]
+  onEdit?: (m: AdminMatchRow) => void
 }
 
-function formatMatchDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function sortByMatchNumber(a: AdminMatchRow, b: AdminMatchRow): number {
+  return a.matchNumber - b.matchNumber
 }
 
-export const AdminMatchScheduleList = ({ matches, onEdit }: AdminMatchScheduleListProps) => (
-  <section className="space-y-5">
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Fixture list</h2>
-        <p className="mt-1 text-lg font-semibold tracking-tight text-white">Scheduled matches</p>
-      </div>
-      <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium tabular-nums text-white/75">
-        {matches.length} {matches.length === 1 ? "match" : "matches"}
-      </span>
-    </div>
+const tabTriggerClass =
+  'shrink-0 rounded-md px-3 text-sm text-white/55 hover:text-white/85 data-[active]:text-white data-[active]:after:bg-emerald-400/80 dark:data-[active]:bg-transparent sm:px-4'
 
-    <ul className="grid gap-4">
-      {matches.map((m) => (
-        <li key={m._id}>
-          <div
-            className={cn(
-              "group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-1 shadow-sm transition-all duration-300",
-              "hover:border-emerald-400/25 hover:shadow-md hover:shadow-black/20"
-            )}
-          >
-            <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-gradient-to-b from-emerald-500 to-teal-600 opacity-90" />
-            <div className="relative flex flex-col gap-4 rounded-xl bg-gradient-to-br from-white/[0.06] to-transparent p-4 pl-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5">
-              <div className="min-w-0 flex-1 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-white/60">
-                    #{m.matchNumber}
-                  </span>
-                  {m.isScored ? (
-                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
-                      Scored
-                    </span>
-                  ) : (
-                    <span className="rounded-full border border-amber-400/30 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-100">
-                      Pending
-                    </span>
-                  )}
-                </div>
+export const AdminMatchScheduleList = ({
+  matches,
+  onEdit,
+}: AdminMatchScheduleListProps) => {
+  const { pending, scored } = useMemo(() => {
+    const pendingList = matches
+      .filter((m) => !m.isScored)
+      .sort(sortByMatchNumber)
+    const scoredList = matches.filter((m) => m.isScored).sort(sortByMatchNumber)
+    return { pending: pendingList, scored: scoredList }
+  }, [matches])
 
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base font-semibold tracking-tight sm:text-lg">
-                  <span className="inline-flex items-center gap-2 text-white">
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/55"
-                      title="Home"
-                    >
-                      <Home className="size-3.5 shrink-0 opacity-70" aria-hidden />
-                      Home
-                    </span>
-                    <AdminScoreTeamLogo
-                      logoUrl={m.franchiseA?.logoUrl}
-                      shortCode={m.franchiseA?.shortCode ?? "—"}
-                      size="sm"
-                    />
-                    <span>{m.franchiseA?.shortCode}</span>
-                  </span>
-                  <span className="text-xs font-normal text-white/45">vs</span>
-                  <span className="inline-flex items-center gap-2 text-white">
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/55"
-                      title="Away"
-                    >
-                      <Plane className="size-3.5 shrink-0 opacity-70" aria-hidden />
-                      Away
-                    </span>
-                    <AdminScoreTeamLogo
-                      logoUrl={m.franchiseB?.logoUrl}
-                      shortCode={m.franchiseB?.shortCode ?? "—"}
-                      size="sm"
-                    />
-                    <span>{m.franchiseB?.shortCode}</span>
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60 sm:text-sm">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Calendar className="size-3.5 shrink-0 opacity-60" aria-hidden />
-                    {formatMatchDate(m.date)}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <MapPin className="size-3.5 shrink-0 opacity-60" aria-hidden />
-                    {formatVenueLabel(m.venue)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-                {onEdit ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl border-white/20 bg-white/5 text-white hover:bg-white/10"
-                    onClick={() => onEdit(m)}
-                  >
-                    <Pencil className="size-3.5" aria-hidden />
-                    Edit
-                  </Button>
-                ) : null}
-                <Link
-                  href={`/admin/matches/${m._id}/score`}
-                  className={cn(
-                    "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition-all",
-                    "hover:border-emerald-400/40 hover:bg-emerald-500/20 hover:text-white",
-                    "group-hover:border-emerald-400/35"
-                  )}
-                >
-                  Score
-                  <ArrowUpRight className="size-4 opacity-70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden />
-                </Link>
-              </div>
-            </div>
+  if (matches.length === 0) {
+    return (
+      <section className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+              Fixture list
+            </h2>
+            <p className="mt-1 text-lg font-semibold tracking-tight text-white">
+              Scheduled matches
+            </p>
           </div>
-        </li>
-      ))}
-    </ul>
+          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium tabular-nums text-white/75">
+            0 matches
+          </span>
+        </div>
+        <div className="rounded-2xl border border-dashed border-white/20 bg-white/[0.04] px-6 py-16 text-center">
+          <p className="text-sm font-medium text-white">No fixtures yet</p>
+          <p className="mt-2 text-sm text-white/65">
+            Click &quot;Schedule match&quot; above to add the first fixture.
+          </p>
+        </div>
+      </section>
+    )
+  }
 
-    {matches.length === 0 && (
-      <div className="rounded-2xl border border-dashed border-white/20 bg-white/[0.04] px-6 py-16 text-center">
-        <p className="text-sm font-medium text-white">No fixtures yet</p>
-        <p className="mt-2 text-sm text-white/65">
-          Click &quot;Schedule match&quot; above to add the first fixture.
-        </p>
+  return (
+    <section className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+            Fixture list
+          </h2>
+          <p className="mt-1 text-lg font-semibold tracking-tight text-white">
+            Scheduled matches
+          </p>
+        </div>
+        <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium tabular-nums text-white/75">
+          {matches.length} {matches.length === 1 ? 'match' : 'matches'}
+        </span>
       </div>
-    )}
-  </section>
-);
+
+      <Tabs defaultValue="pending" className="w-full text-white">
+        <div className="shrink-0 border-b border-white/10 bg-black/15 px-1 py-2 backdrop-blur-sm sm:px-0 w-full rounded-lg mb-3">
+          <TabsList
+            variant="line"
+            className="h-9 w-full min-w-0 justify-start gap-1 overflow-x-auto overflow-y-hidden bg-transparent p-0 [-webkit-overflow-scrolling:touch] sm:w-auto w-full"
+          >
+            <TabsTrigger value="pending" className={cn(tabTriggerClass)}>
+              Pending
+              <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-white/65">
+                {pending.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="scored" className={cn(tabTriggerClass)}>
+              Scored
+              <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-white/65">
+                {scored.length}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+          <div className="px-4 mb-5">
+            <TabsContent
+              value="pending"
+              className="mt-4 space-y-0 data-[state=inactive]:hidden"
+            >
+              {pending.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-amber-400/25 bg-amber-500/[0.06] px-6 py-14 text-center">
+                  <p className="text-sm font-medium text-white/90">
+                    No pending matches
+                  </p>
+                  <p className="mt-2 text-sm text-white/60">
+                    Every scheduled fixture has been scored.
+                  </p>
+                </div>
+              ) : (
+                <ul className="grid gap-4">
+                  {pending.map((m) => (
+                    <AdminMatchFixtureRow key={m._id} m={m} onEdit={onEdit} />
+                  ))}
+                </ul>
+              )}
+            </TabsContent>
+
+            <TabsContent
+              value="scored"
+              className="mt-4 space-y-0 data-[state=inactive]:hidden"
+            >
+              {scored.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/20 bg-white/[0.04] px-6 py-14 text-center">
+                  <p className="text-sm font-medium text-white">
+                    No scored matches yet
+                  </p>
+                  <p className="mt-2 text-sm text-white/65">
+                    Submit scores from each match&apos;s page when ready.
+                  </p>
+                </div>
+              ) : (
+                <ul className="grid gap-4">
+                  {scored.map((m) => (
+                    <AdminMatchFixtureRow key={m._id} m={m} onEdit={onEdit} />
+                  ))}
+                </ul>
+              )}
+            </TabsContent>
+          </div>
+        </div>
+      </Tabs>
+    </section>
+  )
+}
