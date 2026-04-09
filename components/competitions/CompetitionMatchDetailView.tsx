@@ -190,6 +190,7 @@ export const CompetitionMatchDetailView = ({ competitionId, matchId }: Competiti
           Bowling={selectedRow.Bowling}
           Fielding={selectedRow.Fielding}
           participated={selectedRow.participated}
+          isPlayerOfMatch={selectedRow.isPlayerOfMatch}
         />
       ) : null}
     </>

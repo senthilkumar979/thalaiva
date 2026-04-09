@@ -10,7 +10,7 @@ import {
 } from "@/lib/entryRosterVersion";
 import { getEffectiveFromMatchNumber } from "@/lib/swapEffectiveMatch";
 import {
-  LEADERSHIP_CHANGE_PENALTY,
+  leadershipPenaltyPoints,
   MAX_PLAYER_SWAPS_TOTAL,
   MAX_SWAPS_PER_TIER_SLOT,
   playerSwapPenaltyForTierSlot,
@@ -258,8 +258,7 @@ export async function executeEntrySwaps(
     playerPenaltyTotal += playerSwapPenaltyForTierSlot(s.tierSlot);
   }
 
-  const leadershipPenalty =
-    captainChanged || viceChanged ? LEADERSHIP_CHANGE_PENALTY : 0;
+  const leadershipPenalty = leadershipPenaltyPoints(captainChanged, viceChanged);
   const totalPenalty = playerPenaltyTotal + leadershipPenalty;
 
   await ensureBaselineRosterVersionBeforeSwap(entry.toObject(), session ?? undefined);
@@ -327,7 +326,7 @@ export async function executeEntrySwaps(
       tierSlot: 0 as const,
       effectiveFromMatchNumber: effectiveFrom,
       swapsRemainingAfter,
-      penaltyPoints: LEADERSHIP_CHANGE_PENALTY,
+      penaltyPoints: leadershipPenaltyPoints(captainChanged, viceChanged),
       captainUpdated: captainChanged,
       viceCaptainUpdated: viceChanged,
     };

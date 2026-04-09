@@ -16,7 +16,7 @@ export interface SwapEligibility {
   swapWindowOpen: boolean;
   activeSwapWindowId: string | null;
   entriesClosed: boolean;
-  /** One change to captain or vice-captain for the whole competition (−200). */
+  /** One change to captain (−500) or vice-captain (−300) for the competition (per window rules). */
   leadershipChangeAvailable: boolean;
   /** @deprecated Use leadershipChangeAvailable */
   captainChangeAvailable?: boolean;

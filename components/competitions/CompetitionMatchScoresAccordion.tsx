@@ -12,6 +12,8 @@ export interface MatchScorePlayerRow {
   Bowling: IBowlingStats;
   Fielding: IFieldingStats;
   participated: boolean;
+  /** True when this player is `Match.playerOfMatch` and in the XI. */
+  isPlayerOfMatch: boolean;
   fantasyPoints: number;
   sectionPoints: {
     batting: number;

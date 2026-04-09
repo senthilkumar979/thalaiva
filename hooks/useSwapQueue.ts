@@ -7,7 +7,7 @@ import {
 } from "@/components/swaps/swapSelectLabels";
 import type { SwapEligibility } from "@/hooks/useSwapEligibility";
 import {
-  LEADERSHIP_CHANGE_PENALTY,
+  leadershipPenaltyPoints,
   playerSwapPenaltyForTierSlot,
 } from "@/lib/swapPenaltyRules";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -210,8 +210,9 @@ export function useSwapQueue({
     [draft, eligibility.tierRemaining, eligibility.swapsRemaining, squadNormByTier, pools]
   );
 
-  const hasLeadership =
-    Boolean(newCaptainId?.trim()) || Boolean(newViceCaptainId?.trim());
+  const captainLead = Boolean(newCaptainId?.trim());
+  const viceLead = Boolean(newViceCaptainId?.trim());
+  const hasLeadership = captainLead || viceLead;
 
   const buildSwapBody = useCallback((): Record<string, unknown> => {
     const body: Record<string, unknown> = {
@@ -280,7 +281,11 @@ export function useSwapQueue({
     (sum, s) => sum + playerSwapPenaltyForTierSlot(s.tierSlot),
     0
   );
-  const penaltyPreview = playerPenaltyTotal + (hasLeadership ? LEADERSHIP_CHANGE_PENALTY : 0);
+  const leadershipPreviewPenalty = leadershipPenaltyPoints(
+    captainLead,
+    viceLead && !captainLead
+  );
+  const penaltyPreview = playerPenaltyTotal + leadershipPreviewPenalty;
 
   const removePending = useCallback((globalIndex: number) => {
     setPending((p) => p.filter((_, idx) => idx !== globalIndex));
@@ -310,7 +315,7 @@ export function useSwapQueue({
     nextLabel,
     penaltyPreview,
     playerPenaltyTotal,
-    leadershipPenalty: hasLeadership ? LEADERSHIP_CHANGE_PENALTY : 0,
+    leadershipPenalty: leadershipPreviewPenalty,
     removePending,
   };
 }

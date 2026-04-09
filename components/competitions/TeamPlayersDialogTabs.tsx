@@ -22,12 +22,15 @@ interface TeamPlayersDialogTabsProps {
 }
 
 const tabTriggerClass =
-  "rounded-md px-4 text-white/50 hover:text-white/80 data-[active]:text-white data-[active]:after:bg-amber-400/85 dark:data-[active]:bg-transparent dark:data-[active]:text-white";
+  "shrink-0 whitespace-nowrap rounded-md px-3 text-sm text-white/50 hover:text-white/80 data-[active]:text-white data-[active]:after:bg-amber-400/85 dark:data-[active]:bg-transparent dark:data-[active]:text-white sm:px-4 sm:text-base";
 
 export const TeamPlayersDialogTabs = ({ rows, swapRows }: TeamPlayersDialogTabsProps) => (
   <Tabs defaultValue="squad" className="flex min-h-0 flex-1 flex-col text-white">
-    <div className="shrink-0 border-b border-white/10 bg-black/20 px-4 pt-3 backdrop-blur-sm sm:px-6">
-      <TabsList variant="line" className="h-9 w-full justify-start gap-1 bg-transparent p-0 sm:w-auto">
+    <div className="shrink-0 border-b border-white/10 bg-black/20 px-3 pt-3 backdrop-blur-sm sm:px-6">
+      <TabsList
+        variant="line"
+        className="h-9 w-full min-w-0 justify-start gap-1 overflow-x-auto overflow-y-hidden bg-transparent p-0 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] sm:w-auto"
+      >
         <TabsTrigger value="squad" className={tabTriggerClass}>
           Squad
           {rows.length > 0 ? (
@@ -49,18 +52,20 @@ export const TeamPlayersDialogTabs = ({ rows, swapRows }: TeamPlayersDialogTabsP
 
     <TabsContent
       value="squad"
-      className="mt-0 min-h-0 flex-1 overflow-y-auto px-4 py-4 data-[state=inactive]:hidden sm:px-6"
+      className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 py-3 data-[state=inactive]:hidden sm:px-6 sm:py-4"
     >
       {rows.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-black/25 p-1 shadow-inner shadow-black/20 backdrop-blur-sm">
-          <div className="rounded-lg px-2 py-2 sm:px-4 sm:py-4">
-            <SubmittedPlayersTable
-              rows={rows.map((row: SubmittedPlayerRow & { tier?: number }) => ({
-                ...row,
-                tierLabel: tierLabelFromPlayerTier(row.tier),
-              }))}
-              variant="competitionEntry"
-            />
+        <div className="max-w-full rounded-xl border border-white/10 bg-black/25 p-1 shadow-inner shadow-black/20 backdrop-blur-sm">
+          <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] rounded-lg">
+            <div className="min-w-0 px-2 py-2 sm:px-4 sm:py-4">
+              <SubmittedPlayersTable
+                rows={rows.map((row: SubmittedPlayerRow & { tier?: number }) => ({
+                  ...row,
+                  tierLabel: tierLabelFromPlayerTier(row.tier),
+                }))}
+                variant="competitionEntry"
+              />
+            </div>
           </div>
         </div>
       ) : (
@@ -72,7 +77,7 @@ export const TeamPlayersDialogTabs = ({ rows, swapRows }: TeamPlayersDialogTabsP
 
     <TabsContent
       value="transfers"
-      className="mt-0 min-h-0 flex-1 overflow-y-auto px-4 py-4 data-[state=inactive]:hidden sm:px-6"
+      className="mt-0 min-h-0 flex-1 overflow-y-auto px-3 py-3 data-[state=inactive]:hidden sm:px-6 sm:py-4"
     >
       <TeamSwapAuditSection rows={swapRows} showTitle={false} appearance="competition" />
     </TabsContent>

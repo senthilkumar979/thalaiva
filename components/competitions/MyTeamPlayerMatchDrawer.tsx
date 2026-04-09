@@ -20,6 +20,7 @@ interface ApiDetail {
   Bowling?: IBowlingStats;
   Fielding?: IFieldingStats;
   participated?: boolean;
+  isPlayerOfMatch?: boolean;
 }
 
 interface MyTeamPlayerMatchDrawerProps {
@@ -90,6 +91,7 @@ export const MyTeamPlayerMatchDrawer = ({
           Bowling: data.Bowling,
           Fielding: data.Fielding,
           participated: Boolean(data.participated),
+          isPlayerOfMatch: Boolean(data.isPlayerOfMatch),
         }
       : null;
 

@@ -23,6 +23,7 @@ interface PlayerMatchScoreDetailDrawerProps {
   Bowling: IBowlingStats
   Fielding: IFieldingStats
   participated: boolean
+  isPlayerOfMatch?: boolean
 }
 
 export const PlayerMatchScoreDetailDrawer = (

@@ -141,7 +141,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
           <p className="max-w-2xl text-sm text-white/65">
             Same-tier swaps only: up to six player changes per competition (two
             per squad tier slot), with score penalties per swap. You may change
-            captain or vice-captain once total (−200). New picks count from the
+            captain once (−500 pts) or vice-captain once (−300 pts). New picks count from the
             next match in schedule order. History is below per window.
           </p>
         </header>

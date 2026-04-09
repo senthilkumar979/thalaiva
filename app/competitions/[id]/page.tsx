@@ -235,6 +235,15 @@ export default function CompetitionDetailPage() {
               All matches
             </Button>
           </Link>
+          <Link href={`/competitions/${id}/players/leaderboard`} className="inline-flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+            >
+              Player points
+            </Button>
+          </Link>
           <Link href={`/competitions/${id}/scores`} className="inline-flex">
             <Button
               type="button"

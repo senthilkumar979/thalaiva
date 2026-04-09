@@ -1,26 +1,35 @@
-import { Sparkles } from "lucide-react";
-import type { IBattingStats, IBowlingStats, IFieldingStats } from "@/models/PlayerMatchScore";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PlayerScoreIdentityBlock } from "@/components/PlayerScoreIdentityBlock";
-import { cn } from "@/lib/utils";
-import { getPlayerMatchFantasyPointsBreakdown, groupBreakdownBySection } from "@/lib/scoring";
+import { Sparkles } from 'lucide-react'
+import type {
+  IBattingStats,
+  IBowlingStats,
+  IFieldingStats,
+} from '@/models/PlayerMatchScore'
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { PlayerScoreIdentityBlock } from '@/components/PlayerScoreIdentityBlock'
+import { cn } from '@/lib/utils'
+import {
+  getPlayerMatchFantasyPointsBreakdown,
+  groupBreakdownBySection,
+} from '@/lib/scoring'
 import {
   FantasySectionCard,
   RawBlock,
   RawDl,
-} from "@/components/competitions/playerMatchFantasyDetailBlocks";
+} from '@/components/competitions/playerMatchFantasyDetailBlocks'
 
 export interface PlayerMatchScoreDetailPanelProps {
-  playerName: string;
-  matchTitle: string;
-  franchiseShortCode: string;
-  franchiseLogoUrl?: string;
-  franchiseName?: string;
-  role: string;
-  Batting: IBattingStats;
-  Bowling: IBowlingStats;
-  Fielding: IFieldingStats;
-  participated: boolean;
+  playerName: string
+  matchTitle: string
+  franchiseShortCode: string
+  franchiseLogoUrl?: string
+  franchiseName?: string
+  role: string
+  Batting: IBattingStats
+  Bowling: IBowlingStats
+  Fielding: IFieldingStats
+  participated: boolean
+  /** Aligns with `Match.playerOfMatch` when the player was in the XI. */
+  isPlayerOfMatch?: boolean
 }
 
 export const PlayerMatchScoreDetailPanel = ({
@@ -34,12 +43,14 @@ export const PlayerMatchScoreDetailPanel = ({
   Bowling,
   Fielding,
   participated,
+  isPlayerOfMatch = false,
 }: PlayerMatchScoreDetailPanelProps) => {
   const { total, breakdown } = getPlayerMatchFantasyPointsBreakdown(
     { Batting, Bowling, Fielding },
-    participated
-  );
-  const grouped = groupBreakdownBySection(breakdown);
+    participated,
+    isPlayerOfMatch,
+  )
+  const grouped = groupBreakdownBySection(breakdown)
 
   return (
     <>
@@ -51,20 +62,22 @@ export const PlayerMatchScoreDetailPanel = ({
           </span>
           <span
             className={cn(
-              "rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1",
+              'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1',
               participated
-                ? "bg-emerald-500/15 text-emerald-200 ring-emerald-400/25"
-                : "bg-white/10 text-white/45 ring-white/15"
+                ? 'bg-emerald-500/15 text-emerald-200 ring-emerald-400/25'
+                : 'bg-white/10 text-white/45 ring-white/15',
             )}
           >
-            {participated ? "Played in XI" : "Bench / DNP"}
+            {participated ? 'Played in XI' : 'Bench / DNP'}
           </span>
         </div>
         <div className="space-y-1">
           <DialogTitle className="text-xl font-bold leading-tight tracking-tight text-white">
             {playerName}
           </DialogTitle>
-          <p className="text-sm font-normal leading-snug text-white/65">{matchTitle}</p>
+          <p className="text-sm font-normal leading-snug text-white/65">
+            {matchTitle}
+          </p>
         </div>
         <PlayerScoreIdentityBlock
           franchiseShortCode={franchiseShortCode}
@@ -75,22 +88,24 @@ export const PlayerMatchScoreDetailPanel = ({
       </DialogHeader>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col space-y-5 overflow-y-auto px-5 py-5 text-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Raw stats</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+          Raw stats
+        </p>
 
         <RawBlock title="Batting">
           <RawDl
             items={[
-              { label: "Runs", value: Batting.runs },
-              { label: "Balls", value: Batting.ballsFaced },
+              { label: 'Runs', value: Batting.runs },
+              { label: 'Balls', value: Batting.ballsFaced },
               {
-                label: "4s / 6s",
+                label: '4s / 6s',
                 value: (
                   <>
                     {Batting.fours} / {Batting.sixes}
                   </>
                 ),
               },
-              { label: "Out", value: Batting.isOut ? "Yes" : "No" },
+              { label: 'Out', value: Batting.isOut ? 'Yes' : 'No' },
             ]}
           />
         </RawBlock>
@@ -98,11 +113,11 @@ export const PlayerMatchScoreDetailPanel = ({
         <RawBlock title="Bowling">
           <RawDl
             items={[
-              { label: "Wickets", value: Bowling.wickets },
-              { label: "Overs", value: Bowling.oversBowled },
-              { label: "Runs conc.", value: Bowling.runsConceded },
+              { label: 'Wickets', value: Bowling.wickets },
+              { label: 'Overs', value: Bowling.oversBowled },
+              { label: 'Runs conc.', value: Bowling.runsConceded },
               {
-                label: "Maidens / Dots",
+                label: 'Maidens / Dots',
                 value: (
                   <>
                     {Bowling.maidenOvers} / {Bowling.dotBalls}
@@ -116,9 +131,9 @@ export const PlayerMatchScoreDetailPanel = ({
         <RawBlock title="Fielding">
           <RawDl
             items={[
-              { label: "Catches", value: Fielding.catches },
-              { label: "Stumpings", value: Fielding.stumpings },
-              { label: "Run-outs", value: Fielding.runOuts },
+              { label: 'Catches', value: Fielding.catches },
+              { label: 'Stumpings', value: Fielding.stumpings },
+              { label: 'Run-outs', value: Fielding.runOuts },
             ]}
           />
         </RawBlock>
@@ -127,12 +142,28 @@ export const PlayerMatchScoreDetailPanel = ({
           Fantasy points
         </p>
 
-        <FantasySectionCard title="Batting" rows={grouped.batting} accent="amber" />
-        <FantasySectionCard title="Bowling" rows={grouped.bowling} accent="sky" />
-        <FantasySectionCard title="Fielding" rows={grouped.fielding} accent="emerald" />
+        <FantasySectionCard
+          title="Batting"
+          rows={grouped.batting}
+          accent="amber"
+        />
+        <FantasySectionCard
+          title="Bowling"
+          rows={grouped.bowling}
+          accent="sky"
+        />
+        <FantasySectionCard
+          title="Fielding"
+          rows={grouped.fielding}
+          accent="emerald"
+        />
 
         {grouped.participation.length > 0 ? (
-          <FantasySectionCard title="Match participation" rows={grouped.participation} accent="violet" />
+          <FantasySectionCard
+            title="Match bonuses"
+            rows={grouped.participation}
+            accent="violet"
+          />
         ) : null}
 
         <div className="flex items-center justify-between rounded-xl border border-emerald-400/25 bg-emerald-500/15 px-4 py-3 font-semibold tabular-nums text-emerald-100 shadow-inner shadow-black/20">
@@ -141,5 +172,5 @@ export const PlayerMatchScoreDetailPanel = ({
         </div>
       </div>
     </>
-  );
-};
+  )
+}

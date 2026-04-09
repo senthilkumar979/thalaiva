@@ -120,7 +120,7 @@ export const AdminScorePlayerRow = ({
             onChange={(n) => onChange({ ...value, Batting: { ...b, sixes: n } })}
           />
         </div>
-        <label className={chkRow}>
+        {/* <label className={chkRow}>
           <input
             type="checkbox"
             className={cn(
@@ -132,7 +132,7 @@ export const AdminScorePlayerRow = ({
           />
           <span className="font-medium">Dismissed</span>
           <span className={chkMuted}>(unchecked = not out)</span>
-        </label>
+        </label> */}
       </StatPanel>
 
       <StatPanel
@@ -149,6 +149,15 @@ export const AdminScorePlayerRow = ({
             surface={surface}
             onChange={(n) => onChange({ ...value, Bowling: { ...bw, oversBowled: n } })}
             decimals
+          />
+
+          <StatInput
+            id={`${pid}-conc`}
+            label="Runs conceded"
+            hint="economy"
+            value={bw.runsConceded}
+            surface={surface}
+            onChange={(n) => onChange({ ...value, Bowling: { ...bw, runsConceded: n } })}
           />
           <StatInput
             id={`${pid}-wkts`}
@@ -174,16 +183,7 @@ export const AdminScorePlayerRow = ({
             surface={surface}
             onChange={(n) => onChange({ ...value, Bowling: { ...bw, maidenOvers: n } })}
           />
-          <StatInput
-            id={`${pid}-conc`}
-            label="Runs conceded"
-            hint="economy"
-            value={bw.runsConceded}
-            surface={surface}
-            onChange={(n) => onChange({ ...value, Bowling: { ...bw, runsConceded: n } })}
-          />
-        </div>
-        <label className={chkRow}>
+          <label className={chkRow}>
           <input
             type="checkbox"
             className={cn(
@@ -194,8 +194,9 @@ export const AdminScorePlayerRow = ({
             onChange={(e) => onChange({ ...value, Bowling: { ...bw, hasHattrick: e.target.checked } })}
           />
           <span className="font-medium">Hat-trick</span>
-          <span className={chkMuted}>(admin-flagged · +{P.HATTRICK_BONUS} pts)</span>
+          <span className={chkMuted}></span>
         </label>
+        </div>
       </StatPanel>
 
       <StatPanel title="Fielding" surface={surface}>

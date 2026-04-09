@@ -1,4 +1,3 @@
-import { AddPlayerToPoolForm } from '@/components/players/AddPlayerToPoolForm'
 import { CompetitionBreadcrumb } from '@/components/competitions/CompetitionBreadcrumb'
 import { HomePlayersExplorer } from '@/components/home/HomePlayersExplorer'
 import { getPlayersGroupedByFranchise } from '@/lib/queries/homePlayers'

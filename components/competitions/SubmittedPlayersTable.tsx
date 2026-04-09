@@ -99,7 +99,7 @@ export const SubmittedPlayersTable = ({
   const competition = variant === 'competitionEntry'
 
   return (
-    <Table className={cn(competition && 'text-white')}>
+    <Table className={cn(competition && 'min-w-[520px] text-white')}>
       <TableHeader>
         <TableRow
           className={cn(

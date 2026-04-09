@@ -177,7 +177,7 @@ export const TeamSwapAuditSection = ({
           competition ? "border-white/10 bg-black/25 p-1 backdrop-blur-sm" : "border-border"
         )}
       >
-        <Table className={cn(competition && "text-white")}>
+        <Table className={cn(competition && "min-w-[720px] text-white")}>
           <TableHeader>
             <TableRow
               className={cn(

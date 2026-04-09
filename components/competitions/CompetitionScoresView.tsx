@@ -144,6 +144,7 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
           Bowling={drawerPlayer.Bowling}
           Fielding={drawerPlayer.Fielding}
           participated={drawerPlayer.participated}
+          isPlayerOfMatch={drawerPlayer.isPlayerOfMatch}
         />
       )}
     </>

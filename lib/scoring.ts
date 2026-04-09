@@ -53,6 +53,10 @@ export function calculateFantasyPointsWithBreakdown(
     // addBreakdown(breakdown, "Duck", -5);
   }
 
+  /** Full overs only (e.g. 3.4 → 3 overs) — same as `updatedScoring` `overPoints`. */
+  const fullOversBowled = Math.floor(bw.oversBowled + 1e-9);
+  addBreakdown(breakdown, "Overs bowled", fullOversBowled * P.PER_OVER);
+
   const wkPts = bw.wickets * P.PER_WICKET;
   addBreakdown(breakdown, "Wickets", wkPts);
 
@@ -90,9 +94,19 @@ export function calculateFantasyPoints(stats: IPlayerMatchScoreInput): number {
 /** Flat bonus when the player is selected as part of the playing XI for this match. */
 export const MATCH_PARTICIPATION_POINTS = 2;
 
-export function playerMatchFantasyPoints(stats: IPlayerMatchScoreInput, participated: boolean): number {
+/** Official player of the match — only when in playing XI (see `Match.playerOfMatch`). */
+export const PLAYER_OF_MATCH_POINTS = P.PLAYER_OF_MATCH;
+
+export function playerMatchFantasyPoints(
+  stats: IPlayerMatchScoreInput,
+  participated: boolean,
+  isPlayerOfMatch = false
+): number {
   const base = calculateFantasyPoints(stats);
-  return base + (participated ? MATCH_PARTICIPATION_POINTS : 0);
+  if (!participated) return base;
+  let extra = MATCH_PARTICIPATION_POINTS;
+  if (isPlayerOfMatch) extra += PLAYER_OF_MATCH_POINTS;
+  return base + extra;
 }
 
 /** @deprecated Use playerMatchFantasyPoints(stats, true) — kept for quick migration references */
@@ -102,7 +116,8 @@ export function totalPlayerMatchFantasyPoints(stats: IPlayerMatchScoreInput): nu
 
 export function getPlayerMatchFantasyPointsBreakdown(
   stats: IPlayerMatchScoreInput,
-  participated: boolean
+  participated: boolean,
+  isPlayerOfMatch = false
 ): {
   total: number;
   breakdown: FantasyPointsBreakdown[];
@@ -111,9 +126,16 @@ export function getPlayerMatchFantasyPointsBreakdown(
   if (!participated) {
     return { total, breakdown };
   }
+  const extras: FantasyPointsBreakdown[] = [
+    { label: "Match participation", points: MATCH_PARTICIPATION_POINTS },
+  ];
+  if (isPlayerOfMatch) {
+    extras.push({ label: "Player of the match", points: PLAYER_OF_MATCH_POINTS });
+  }
+  const extrasSum = MATCH_PARTICIPATION_POINTS + (isPlayerOfMatch ? PLAYER_OF_MATCH_POINTS : 0);
   return {
-    total: total + MATCH_PARTICIPATION_POINTS,
-    breakdown: [...breakdown, { label: "Match participation", points: MATCH_PARTICIPATION_POINTS }],
+    total: total + extrasSum,
+    breakdown: [...breakdown, ...extras],
   };
 }
 
@@ -140,6 +162,7 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
     else if (sr >= P.STRIKE_RATE_THRESHOLD - 20) batting += P.STRIKE_RATE_BONUS;
   }
   let bowling = 0;
+  bowling += Math.floor(bw.oversBowled + 1e-9) * P.PER_OVER;
   bowling += bw.wickets * P.PER_WICKET;
   bowling += bw.maidenOvers * P.PER_MAIDEN;
   bowling += bw.dotBalls * P.PER_DOT_BALL;
@@ -167,6 +190,7 @@ const BATTING_BREAKDOWN_LABELS = new Set([
 ]);
 
 const BOWLING_BREAKDOWN_LABELS = new Set([
+  "Overs bowled",
   "Wickets",
   "Maiden overs",
   "Dot balls",
@@ -189,7 +213,7 @@ export function groupBreakdownBySection(breakdown: FantasyPointsBreakdown[]): {
   const fielding: FantasyPointsBreakdown[] = [];
   const participation: FantasyPointsBreakdown[] = [];
   for (const row of breakdown) {
-    if (row.label === "Match participation") {
+    if (row.label === "Match participation" || row.label === "Player of the match") {
       participation.push(row);
       continue;
     }

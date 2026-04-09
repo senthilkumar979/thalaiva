@@ -17,7 +17,9 @@ export const SwapQueueRulesCallout = ({ eligibility }: SwapQueueRulesCalloutProp
           <li>Slot 1 (tier 1 players): −50 each · max 2 swaps in this slot</li>
           <li>Slot 2 (tier 3 players): −100 each · max 2 swaps</li>
           <li>Slot 3 (tier 5 players): −200 each · max 2 swaps</li>
-          <li>Change captain or vice-captain once per competition: −200 (set above the queue)</li>
+          <li>
+            One leadership change per competition: captain −500 or vice-captain −300 (set above the queue)
+          </li>
         </ul>
         <p className="pt-1 text-white/55">
           Player swaps left:{" "}

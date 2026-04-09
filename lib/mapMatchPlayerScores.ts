@@ -1,9 +1,14 @@
-import { MATCH_PARTICIPATION_POINTS, sectionFantasyPoints } from "@/lib/scoring";
+import {
+  MATCH_PARTICIPATION_POINTS,
+  PLAYER_OF_MATCH_POINTS,
+  sectionFantasyPoints,
+} from "@/lib/scoring";
 import type { MatchScorePlayerRow } from "@/components/competitions/CompetitionMatchScoresAccordion";
 import type { IPlayerMatchScore } from "@/models/PlayerMatchScore";
 
 type LeanMatch = {
   franchiseA: { _id: unknown };
+  playerOfMatch?: unknown;
 };
 
 /**
@@ -31,6 +36,14 @@ export function mapPlayerMatchScoresToRows(
       Fielding: row.Fielding,
     });
     const participated = Boolean(row.participated);
+    const pomRaw = match.playerOfMatch;
+    const pomId =
+      pomRaw == null
+        ? ""
+        : typeof pomRaw === "object" && pomRaw !== null && "_id" in pomRaw
+          ? String((pomRaw as { _id: unknown })._id)
+          : String(pomRaw);
+    const isPlayerOfMatch = participated && pomId !== "" && String(pl._id) === pomId;
     return {
       playerId: String(pl._id),
       name: pl.name,
@@ -42,12 +55,15 @@ export function mapPlayerMatchScoresToRows(
       Bowling: row.Bowling,
       Fielding: row.Fielding,
       participated,
+      isPlayerOfMatch,
       fantasyPoints: row.fantasyPoints,
       sectionPoints: {
         batting: sec.batting,
         bowling: sec.bowling,
         fielding: sec.fielding,
-        participation: participated ? MATCH_PARTICIPATION_POINTS : 0,
+        participation:
+          (participated ? MATCH_PARTICIPATION_POINTS : 0) +
+          (isPlayerOfMatch ? PLAYER_OF_MATCH_POINTS : 0),
       },
     };
   });

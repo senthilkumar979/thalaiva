@@ -61,7 +61,9 @@ export const SwapStatusCard = ({ eligibility }: SwapStatusCardProps) => {
           <div>
             <p className="text-xs text-white/55">Captain / vice change</p>
             <p className="text-sm font-medium text-white">
-              {eligibility.leadershipChangeAvailable ? "Available once (−200)" : "Already used"}
+              {eligibility.leadershipChangeAvailable
+                ? "Available once (captain −500 / vice −300)"
+                : "Already used"}
             </p>
           </div>
         </div>

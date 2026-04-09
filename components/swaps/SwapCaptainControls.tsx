@@ -41,7 +41,7 @@ export const SwapCaptainControls = ({
   return (
     <div className="grid gap-4 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2">
       <p className="text-xs font-medium uppercase tracking-wider text-white/50 sm:col-span-2">
-        Optional — change captain or vice-captain once for the entire competition (−200 points). Pick
+        Optional — change captain once (−500) or vice-captain once (−300) for the entire competition. Pick
         only one; choosing one clears the other.
       </p>
       <div className="space-y-1">

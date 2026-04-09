@@ -97,20 +97,25 @@ export const CompetitionTeamPlayersDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "flex max-h-[min(92vh,880px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl lg:max-w-5xl",
-          "border-white/15 bg-blue-950/[10] text-white shadow-2xl ring-1 ring-white/10 sm:rounded-2xl",
+          "flex min-h-0 w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0",
+          "max-h-[min(100dvh-1rem,880px)] sm:max-h-[min(92vh,880px)] sm:w-full sm:max-w-3xl lg:max-w-5xl",
+          "rounded-xl border-white/15 bg-blue-950/[10] text-white shadow-2xl ring-1 ring-white/10 sm:rounded-2xl",
+          "pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.25rem,env(safe-area-inset-top))]",
+          "[&_[data-slot=dialog-close]]:right-3 [&_[data-slot=dialog-close]]:top-3 [&_[data-slot=dialog-close]]:min-h-10 [&_[data-slot=dialog-close]]:min-w-10",
           "[&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white [&_[data-slot=dialog-close]]:opacity-100"
         )}
       >
-        <TeamPlayersDialogHero
-          displayName={displayName}
-          loading={loading}
-          squadCount={rows.length}
-          transferCount={swapRows.length}
-          penaltyTotal={penaltyTotal}
-        />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <TeamPlayersDialogHero
+            displayName={displayName}
+            loading={loading}
+            squadCount={rows.length}
+            transferCount={swapRows.length}
+            penaltyTotal={penaltyTotal}
+          />
 
-        {loading ? <TeamPlayersDialogLoading /> : <TeamPlayersDialogTabs rows={rows} swapRows={swapRows} />}
+          {loading ? <TeamPlayersDialogLoading /> : <TeamPlayersDialogTabs rows={rows} swapRows={swapRows} />}
+        </div>
       </DialogContent>
     </Dialog>
   );

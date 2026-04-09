@@ -3,7 +3,18 @@ export type SwapTierSlot = 1 | 2 | 3;
 
 export const MAX_SWAPS_PER_TIER_SLOT = 2;
 export const MAX_PLAYER_SWAPS_TOTAL = 6;
-export const LEADERSHIP_CHANGE_PENALTY = -200;
+
+/** Penalty when changing captain (one change per competition window rules). */
+export const CAPTAIN_SWAP_PENALTY = -500;
+/** Penalty when changing vice-captain. */
+export const VICE_CAPTAIN_SWAP_PENALTY = -300;
+
+/** Server allows only one leadership change per request; captain vs vice are mutually exclusive. */
+export function leadershipPenaltyPoints(captainChanged: boolean, viceChanged: boolean): number {
+  if (captainChanged) return CAPTAIN_SWAP_PENALTY;
+  if (viceChanged) return VICE_CAPTAIN_SWAP_PENALTY;
+  return 0;
+}
 
 export function playerSwapPenaltyForTierSlot(tierSlot: SwapTierSlot): number {
   switch (tierSlot) {
