@@ -7,6 +7,7 @@ import type { SwapEligibility } from '@/hooks/useSwapEligibility'
 interface PlayerLite {
   _id: string
   name: string
+  role: string
   franchise: {
     _id: string
     name: string
@@ -52,7 +53,6 @@ export const SwapEntryActions = ({
     {entry && eligibility.canSwap ? (
       <SwapCaptainControls
         squad={squad}
-        entry={entry}
         leadershipChangeAvailable={eligibility.leadershipChangeAvailable}
         newCaptainId={newCaptainId}
         newViceCaptainId={newViceCaptainId}

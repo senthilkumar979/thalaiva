@@ -1,3 +1,12 @@
+/** Normalize franchise id for comparisons (populated object or raw id). */
+export function normalizeFranchiseId(
+  franchise: { _id: unknown } | string | null | undefined
+): string {
+  if (franchise == null) return "";
+  if (typeof franchise === "string") return franchise;
+  return String(franchise._id);
+}
+
 /** Normalize Mongo-style ids for Select value matching. */
 export function normalizePlayerId(id: unknown): string {
   if (id == null) return "";
@@ -11,6 +20,7 @@ export function normalizePlayerId(id: unknown): string {
 export interface PlayerOption {
   _id: unknown;
   name: string;
+  role: string;
   franchise: {
     _id: string;
     name: string;
@@ -23,6 +33,7 @@ export interface PlayerOption {
 export interface PlayerOptionNorm {
   _id: string;
   name: string;
+  role: string;
   franchise: {
     _id: string;
     name: string;

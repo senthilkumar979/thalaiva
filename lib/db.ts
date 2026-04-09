@@ -26,3 +26,29 @@ export async function connectDb(): Promise<typeof mongoose> {
   await seedFranchisesIfEmpty();
   return cache.conn;
 }
+
+/**
+ * Standalone `mongod` does not support multi-document transactions (MongoServerError code 20).
+ * `startTransaction()` may succeed; the first command with the session can throw instead.
+ */
+export function isMongoTransactionUnsupportedError(e: unknown): boolean {
+  let cur: unknown = e;
+  for (let i = 0; i < 6 && cur; i++) {
+    const err = cur as {
+      code?: number;
+      errorResponse?: { code?: number };
+      message?: string;
+      cause?: unknown;
+    };
+    const code = err.code ?? err.errorResponse?.code;
+    if (code === 20) return true;
+    if (
+      typeof err.message === "string" &&
+      err.message.includes("Transaction numbers are only allowed")
+    ) {
+      return true;
+    }
+    cur = err.cause;
+  }
+  return false;
+}

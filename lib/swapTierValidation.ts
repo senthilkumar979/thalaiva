@@ -21,12 +21,14 @@ function tierKey(slot: 1 | 2 | 3): "tier1Players" | "tier2Players" | "tier3Playe
 export async function assertSwapPlayersValid(
   tierSlot: 1 | 2 | 3,
   playerInId: string,
-  playerOutId: string
+  playerOutId: string,
+  /** Current 5 player ids in this tier before applying this swap (includes earlier swaps in the same request). */
+  currentTierPlayerIds: Types.ObjectId[]
 ): Promise<void> {
   const expectedTier = TIER_BY_SLOT[tierSlot];
   const [playerIn, playerOut] = await Promise.all([
-    Player.findById(playerInId).lean(),
-    Player.findById(playerOutId).lean(),
+    Player.findById(playerInId).select("tier franchise name isActive").lean(),
+    Player.findById(playerOutId).select("tier franchise name isActive").lean(),
   ]);
   if (!playerIn || !playerOut) throw new Error("Invalid player");
   if (!playerIn.isActive) throw new Error(`Player ${playerIn.name} is inactive`);
@@ -34,6 +36,20 @@ export async function assertSwapPlayersValid(
     throw new Error(`Incoming player must be tier ${expectedTier}`);
   }
   if (String(playerIn._id) === String(playerOut._id)) throw new Error("Cannot swap a player with themselves");
+
+  const inFr = String(playerIn.franchise);
+  const others = currentTierPlayerIds.filter((id) => String(id) !== String(playerOutId));
+  if (others.length !== 4) {
+    throw new Error("Invalid tier state for swap");
+  }
+  const otherPlayers = await Player.find({ _id: { $in: others } }).select("franchise").lean();
+  if (otherPlayers.length !== 4) throw new Error("Invalid player selection in tier");
+  const blockedFranchises = new Set(otherPlayers.map((p) => String(p.franchise)));
+  if (blockedFranchises.has(inFr)) {
+    throw new Error(
+      `Cannot swap in ${playerIn.name}: this tier already has a player from that franchise (five different franchises required per tier)`
+    );
+  }
 }
 
 /** Apply swap on copies; validates franchise uniqueness per tier and full squad rules. */

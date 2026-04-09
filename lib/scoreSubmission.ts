@@ -1,6 +1,6 @@
 import mongoose, { type ClientSession, type Types } from "mongoose";
 import { adminStatInputToFantasyPoints } from "@/lib/adminScoreToUpdatedStats";
-import { connectDb } from "@/lib/db";
+import { connectDb, isMongoTransactionUnsupportedError } from "@/lib/db";
 import { Competition } from "@/models/Competition";
 import { CompetitionMatchScore } from "@/models/CompetitionMatchScore";
 import { Entry } from "@/models/Entry";
@@ -37,9 +37,11 @@ async function scoreEntriesForCompetition(
   matchId: Types.ObjectId,
   matchNumber: number,
   matchScoresByPlayer: Map<string, number>,
-  session: ClientSession
+  session?: ClientSession
 ): Promise<void> {
-  const entries = await Entry.find({ competition: competitionId }).session(session).lean();
+  const entries = session
+    ? await Entry.find({ competition: competitionId }).session(session).lean()
+    : await Entry.find({ competition: competitionId }).lean();
   const cmsRows: {
     entryId: Types.ObjectId;
     userId: Types.ObjectId;
@@ -102,36 +104,111 @@ async function scoreEntriesForCompetition(
           rankThisMatch: row.rankThisMatch,
         },
       },
-      { upsert: true, session }
+      session ? { upsert: true, session } : { upsert: true }
     );
     await Entry.updateOne(
       { _id: row.entryId },
       { $inc: { totalScore: row.totalPointsThisMatch } },
-      { session }
+      session ? { session } : {}
     );
   }
 }
 
-async function rollBackMatchScoring(matchId: string, session: ClientSession): Promise<void> {
+async function rollBackMatchScoring(matchId: string, session?: ClientSession): Promise<void> {
   const mid = new mongoose.Types.ObjectId(matchId);
-  const pms = await PlayerMatchScore.find({ match: mid }).session(session).lean();
+  const pms = session
+    ? await PlayerMatchScore.find({ match: mid }).session(session).lean()
+    : await PlayerMatchScore.find({ match: mid }).lean();
   for (const row of pms) {
     await Player.updateOne(
       { _id: row.player },
       { $inc: { totalFantasyPoints: -row.fantasyPoints } },
-      { session }
+      session ? { session } : {}
     );
   }
-  const cms = await CompetitionMatchScore.find({ match: mid }).session(session).lean();
+  const cms = session
+    ? await CompetitionMatchScore.find({ match: mid }).session(session).lean()
+    : await CompetitionMatchScore.find({ match: mid }).lean();
   for (const row of cms) {
     await Entry.updateOne(
       { _id: row.entry },
       { $inc: { totalScore: -row.totalPointsThisMatch } },
-      { session }
+      session ? { session } : {}
     );
   }
-  await CompetitionMatchScore.deleteMany({ match: mid }).session(session);
-  await PlayerMatchScore.deleteMany({ match: mid }).session(session);
+  await (session
+    ? CompetitionMatchScore.deleteMany({ match: mid }).session(session)
+    : CompetitionMatchScore.deleteMany({ match: mid }));
+  await (session
+    ? PlayerMatchScore.deleteMany({ match: mid }).session(session)
+    : PlayerMatchScore.deleteMany({ match: mid }));
+}
+
+async function submitMatchScoresWithSession(
+  matchId: string,
+  stats: PlayerStatInput[],
+  options: { playerOfMatchPlayerId?: string | null } | undefined,
+  session?: ClientSession
+): Promise<void> {
+  const match = session
+    ? await Match.findById(matchId).session(session)
+    : await Match.findById(matchId);
+  if (!match) throw new Error("Match not found");
+  if (match.isScored) await rollBackMatchScoring(matchId, session);
+
+  const pomId = options?.playerOfMatchPlayerId?.trim() || null;
+
+  for (const s of stats) {
+    const isPlayerOfTheMatch = Boolean(
+      pomId && String(s.playerId) === pomId && s.participated
+    );
+    const pts = adminStatInputToFantasyPoints(matchId, { ...s, isPlayerOfTheMatch });
+    await PlayerMatchScore.findOneAndUpdate(
+      { player: s.playerId, match: matchId },
+      {
+        $set: {
+          Batting: s.Batting,
+          Bowling: s.Bowling,
+          Fielding: s.Fielding,
+          participated: s.participated,
+          fantasyPoints: pts,
+        },
+      },
+      session ? { upsert: true, session } : { upsert: true }
+    );
+    await Player.updateOne(
+      { _id: s.playerId },
+      { $inc: { totalFantasyPoints: pts } },
+      session ? { session } : {}
+    );
+  }
+
+  const allPms = session
+    ? await PlayerMatchScore.find({ match: matchId }).session(session).lean()
+    : await PlayerMatchScore.find({ match: matchId }).lean();
+  const matchScoresByPlayer = new Map<string, number>();
+  for (const p of allPms) matchScoresByPlayer.set(String(p.player), p.fantasyPoints);
+
+  const competitions = session
+    ? await Competition.find({ isActive: true }).session(session).lean()
+    : await Competition.find({ isActive: true }).lean();
+  for (const c of competitions) {
+    await scoreEntriesForCompetition(c._id, match._id, match.matchNumber, matchScoresByPlayer, session);
+  }
+
+  if (pomId) {
+    await Match.updateOne(
+      { _id: matchId },
+      { $set: { isScored: true, playerOfMatch: new mongoose.Types.ObjectId(pomId) } },
+      session ? { session } : {}
+    );
+  } else {
+    await Match.updateOne(
+      { _id: matchId },
+      { $set: { isScored: true }, $unset: { playerOfMatch: "" } },
+      session ? { session } : {}
+    );
+  }
 }
 
 export async function submitMatchScores(
@@ -141,67 +218,34 @@ export async function submitMatchScores(
 ): Promise<void> {
   await connectDb();
   const session = await mongoose.startSession();
-  session.startTransaction();
+  let transactionStarted = false;
   try {
-    const match = await Match.findById(matchId).session(session);
-    if (!match) throw new Error("Match not found");
-    if (match.isScored) await rollBackMatchScoring(matchId, session);
-
-    const pomId = options?.playerOfMatchPlayerId?.trim() || null;
-
-    for (const s of stats) {
-      const isPlayerOfTheMatch = Boolean(
-        pomId && String(s.playerId) === pomId && s.participated
-      );
-      const pts = adminStatInputToFantasyPoints(matchId, { ...s, isPlayerOfTheMatch });
-      await PlayerMatchScore.findOneAndUpdate(
-        { player: s.playerId, match: matchId },
-        {
-          $set: {
-            Batting: s.Batting,
-            Bowling: s.Bowling,
-            Fielding: s.Fielding,
-            participated: s.participated,
-            fantasyPoints: pts,
-          },
-        },
-        { upsert: true, session }
-      );
-      await Player.updateOne(
-        { _id: s.playerId },
-        { $inc: { totalFantasyPoints: pts } },
-        { session }
-      );
-    }
-
-    const allPms = await PlayerMatchScore.find({ match: matchId }).session(session).lean();
-    const matchScoresByPlayer = new Map<string, number>();
-    for (const p of allPms) matchScoresByPlayer.set(String(p.player), p.fantasyPoints);
-
-    const competitions = await Competition.find({ isActive: true }).session(session).lean();
-    for (const c of competitions) {
-      await scoreEntriesForCompetition(c._id, match._id, match.matchNumber, matchScoresByPlayer, session);
-    }
-
-    if (pomId) {
-      await Match.updateOne(
-        { _id: matchId },
-        { $set: { isScored: true, playerOfMatch: new mongoose.Types.ObjectId(pomId) } },
-        { session }
-      );
-    } else {
-      await Match.updateOne(
-        { _id: matchId },
-        { $set: { isScored: true }, $unset: { playerOfMatch: "" } },
-        { session }
-      );
-    }
-
-    await session.commitTransaction();
+    session.startTransaction();
+    transactionStarted = true;
   } catch (e) {
-    await session.abortTransaction();
-    throw e;
-  } finally {
     session.endSession();
+    if (!isMongoTransactionUnsupportedError(e)) throw e;
+    await submitMatchScoresWithSession(matchId, stats, options, undefined);
+    return;
+  }
+
+  if (transactionStarted) {
+    let sessionEnded = false;
+    try {
+      await submitMatchScoresWithSession(matchId, stats, options, session);
+      await session.commitTransaction();
+    } catch (e) {
+      await session.abortTransaction().catch(() => {});
+      session.endSession();
+      sessionEnded = true;
+      if (isMongoTransactionUnsupportedError(e)) {
+        await submitMatchScoresWithSession(matchId, stats, options, undefined);
+      } else {
+        throw e;
+      }
+    }
+    if (!sessionEnded) {
+      session.endSession();
+    }
   }
 }

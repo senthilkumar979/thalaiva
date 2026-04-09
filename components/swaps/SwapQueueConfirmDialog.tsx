@@ -81,7 +81,7 @@ export const SwapQueueConfirmDialog = ({
         </div>
       </div>
       <DialogFooter className="gap-2 sm:justify-end">
-        <Button type="button" variant="outline" className="border-white/25" onClick={() => onOpenChange(false)}>
+        <Button type="button" variant="outline" className="border-white/25 text-black hover:text-slate-500" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
         <Button

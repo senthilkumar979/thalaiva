@@ -1,5 +1,5 @@
-import mongoose, { type ClientSession, type Types } from "mongoose";
-import { Entry } from "@/models/Entry";
+import mongoose, { type ClientSession, type HydratedDocument, type Types } from "mongoose";
+import { Entry, type IEntryDocument } from "@/models/Entry";
 import type { IEntrySwapAudit } from "@/models/EntrySwapAudit";
 import { EntrySwapAudit } from "@/models/EntrySwapAudit";
 import { SwapWindow } from "@/models/SwapWindow";
@@ -61,17 +61,42 @@ function addTierCount(
   else entry.set("swapsUsedTierSlot3", (entry.swapsUsedTierSlot3 ?? 0) + delta);
 }
 
-export async function executeEntrySwaps(input: ExecuteSwapsInput, session: ClientSession): Promise<void> {
-  await ensureEntrySwapMigration(input.entryId, session);
+interface LoadAndValidateSwapResult {
+  entry: HydratedDocument<IEntryDocument>;
+  tier1: Types.ObjectId[];
+  tier2: Types.ObjectId[];
+  tier3: Types.ObjectId[];
+  captain: Types.ObjectId;
+  viceCaptain: Types.ObjectId | undefined;
+  captainChanged: boolean;
+  viceChanged: boolean;
+  capId: string;
+  viceId: string;
+}
 
-  const entry = await Entry.findById(input.entryId).session(session);
+/** Same rules as {@link executeEntrySwaps} up to squad validation (no writes). */
+async function loadAndValidateSwapInput(
+  input: ExecuteSwapsInput,
+  session?: ClientSession | null
+): Promise<LoadAndValidateSwapResult> {
+  await ensureEntrySwapMigration(input.entryId, session ?? undefined);
+
+  const entry = session
+    ? await Entry.findById(input.entryId).session(session)
+    : await Entry.findById(input.entryId);
   if (!entry) throw new Error("Entry not found");
 
-  const win = await SwapWindow.findOne({
-    _id: input.swapWindowId,
-    competition: input.competitionId,
-    isOpen: true,
-  }).session(session);
+  const win = session
+    ? await SwapWindow.findOne({
+        _id: input.swapWindowId,
+        competition: input.competitionId,
+        isOpen: true,
+      }).session(session)
+    : await SwapWindow.findOne({
+        _id: input.swapWindowId,
+        competition: input.competitionId,
+        isOpen: true,
+      });
   if (!win) throw new Error("Swap window is not open");
 
   const swaps = input.swaps;
@@ -82,7 +107,6 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
     if (outs.has(s.playerOutId)) throw new Error("Duplicate player out in request");
     outs.add(s.playerOutId);
     incomingBySlot[s.tierSlot]++;
-    await assertSwapPlayersValid(s.tierSlot, s.playerInId, s.playerOutId);
   }
 
   for (const slot of [1, 2, 3] as const) {
@@ -106,6 +130,9 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
   let tier3 = [...entry.tier3Players];
 
   for (const s of swaps) {
+    const tierArr =
+      s.tierSlot === 1 ? tier1 : s.tierSlot === 2 ? tier2 : tier3;
+    await assertSwapPlayersValid(s.tierSlot, s.playerInId, s.playerOutId, tierArr);
     const applied = applySwapToTiers(
       tier1,
       tier2,
@@ -184,6 +211,48 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
 
   await validateFullSquadAfterSwaps(tier1, tier2, tier3, captain, viceCaptain);
 
+  return {
+    entry,
+    tier1,
+    tier2,
+    tier3,
+    captain,
+    viceCaptain,
+    captainChanged,
+    viceChanged,
+    capId,
+    viceId,
+  };
+}
+
+/** Dry-run the same checks as execute (swap window, limits, franchise, full squad roles). */
+export async function validateSwapRequest(
+  input: ExecuteSwapsInput,
+  session?: ClientSession | null
+): Promise<void> {
+  await loadAndValidateSwapInput(input, session);
+}
+
+/** Pass a session when the deployment supports transactions (replica set / mongos). Omit on standalone MongoDB. */
+export async function executeEntrySwaps(
+  input: ExecuteSwapsInput,
+  session?: ClientSession | null
+): Promise<void> {
+  const {
+    entry,
+    tier1,
+    tier2,
+    tier3,
+    captain,
+    viceCaptain,
+    captainChanged,
+    viceChanged,
+    capId,
+    viceId,
+  } = await loadAndValidateSwapInput(input, session);
+
+  const swaps = input.swaps;
+
   let playerPenaltyTotal = 0;
   for (const s of swaps) {
     playerPenaltyTotal += playerSwapPenaltyForTierSlot(s.tierSlot);
@@ -193,9 +262,9 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
     captainChanged || viceChanged ? LEADERSHIP_CHANGE_PENALTY : 0;
   const totalPenalty = playerPenaltyTotal + leadershipPenalty;
 
-  await ensureBaselineRosterVersionBeforeSwap(entry.toObject(), session);
+  await ensureBaselineRosterVersionBeforeSwap(entry.toObject(), session ?? undefined);
 
-  const effectiveFrom = await getEffectiveFromMatchNumber(session);
+  const effectiveFrom = await getEffectiveFromMatchNumber(session ?? undefined);
 
   entry.tier1Players = tier1;
   entry.tier2Players = tier2;
@@ -218,9 +287,9 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
 
   entry.totalScore = (entry.totalScore ?? 0) + totalPenalty;
 
-  await entry.save({ session });
+  await entry.save(session ? { session } : {});
 
-  await appendRosterVersion(entry.toObject(), effectiveFrom, session);
+  await appendRosterVersion(entry.toObject(), effectiveFrom, session ?? undefined);
 
   const finalTotalSwaps =
     (entry.swapsUsedTierSlot1 ?? 0) + (entry.swapsUsedTierSlot2 ?? 0) + (entry.swapsUsedTierSlot3 ?? 0);
@@ -277,5 +346,5 @@ export async function executeEntrySwaps(input: ExecuteSwapsInput, session: Clien
     }
   }
 
-  if (docs.length > 0) await EntrySwapAudit.insertMany(docs, { session });
+  if (docs.length > 0) await EntrySwapAudit.insertMany(docs, session ? { session } : {});
 }

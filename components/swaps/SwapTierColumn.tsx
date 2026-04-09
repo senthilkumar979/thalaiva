@@ -19,6 +19,7 @@ import {
 import { playerSwapPenaltyForTierSlot } from "@/lib/swapPenaltyRules";
 import { Trash } from "lucide-react";
 import Image from "next/image";
+import { IPL_ROLE_ICON_SVG } from "../../lib/iplRoleIcons";
 
 interface SwapTierColumnProps {
   tierSlot: 1 | 2 | 3;
@@ -88,7 +89,10 @@ export const SwapTierColumn = ({
               {squadNorm.map((p) => (
                 <SelectItem key={p._id} value={p._id}>
                   <div className="flex justify-between gap-2 w-full">
-                    {p.name}
+                    <div className="flex items-center gap-2">
+                      <Image src={IPL_ROLE_ICON_SVG[p.role as keyof typeof IPL_ROLE_ICON_SVG]} alt={p.role} width={20} height={20} />
+                      {p.name}
+                    </div>
                     <div className="flex items-center gap-2">
                       <Image src={p.franchise?.logoUrl} alt={p.franchise?.name} width={20} height={20} />
                       <span className="">{p.franchise?.shortCode ?? "Unknown"}</span></div>
@@ -114,7 +118,10 @@ export const SwapTierColumn = ({
               {poolFiltered.map((p) => (
                 <SelectItem key={p._id} value={p._id}>
                   <div className="flex justify-between gap-2 w-full">
-                    {p.name}
+                    <div className="flex items-center gap-2">
+                      <Image src={IPL_ROLE_ICON_SVG[p.role as keyof typeof IPL_ROLE_ICON_SVG]} alt={p.role} width={20} height={20} />
+                      {p.name}
+                    </div>
                     <div className="flex items-center gap-2">
                       <Image src={p.franchise?.logoUrl} alt={p.franchise?.name} width={20} height={20} />
                       <span className="">{p.franchise?.shortCode ?? "Unknown"}</span></div>

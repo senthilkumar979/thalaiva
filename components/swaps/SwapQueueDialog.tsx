@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SwapQueueConfirmDialog } from "@/components/swaps/SwapQueueConfirmDialog";
+import { SwapQueueRulesCallout } from "@/components/swaps/SwapQueueRulesCallout";
 import {
   labelForPlayerId,
   type PlayerOptionNorm,
 } from "@/components/swaps/swapSelectLabels";
-import { SwapQueueConfirmDialog } from "@/components/swaps/SwapQueueConfirmDialog";
-import { SwapQueueRulesCallout } from "@/components/swaps/SwapQueueRulesCallout";
 import { SwapTierColumn } from "@/components/swaps/SwapTierColumn";
+import { Button } from "@/components/ui/button";
 import type { SwapEligibility } from "@/hooks/useSwapEligibility";
 import { useSwapQueue, type SwapQueueEntry } from "@/hooks/useSwapQueue";
+import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface SwapQueueBoardProps {
   competitionId: string;
@@ -52,6 +52,11 @@ export const SwapQueueBoard = ({
     return null;
   }, [newCaptainId, newViceCaptainId, squad]);
 
+  const handleReviewClick = async () => {
+    const ok = await q.validateForConfirm();
+    if (ok) setConfirmOpen(true);
+  };
+
   const handleConfirmSubmit = async () => {
     const ok = await q.submitAll();
     if (ok) setConfirmOpen(false);
@@ -69,7 +74,8 @@ export const SwapQueueBoard = ({
 
       <SwapQueueRulesCallout eligibility={eligibility} />
 
-      {q.error ? <p className="text-sm text-red-300">{q.error}</p> : null}
+      {q.error && <div className="bg-red-500/20 p-3 rounded-lg border border-red-500/50">
+        <p className="text-sm text-red-500 font-bold">{q.error}</p> </div>}
 
       <div className="grid gap-4 lg:grid-cols-3">
         {([1, 2, 3] as const).map((slot) => {
@@ -112,10 +118,18 @@ export const SwapQueueBoard = ({
         <Button
           type="button"
           className="bg-amber-400 font-semibold text-[#0a2469] hover:bg-amber-300 sm:min-w-[200px]"
-          disabled={q.submitting || (q.pending.length === 0 && !q.hasLeadership)}
-          onClick={() => setConfirmOpen(true)}
+          disabled={
+            q.submitting ||
+            q.validating ||
+            (q.pending.length === 0 && !q.hasLeadership)
+          }
+          onClick={handleReviewClick}
         >
-          {q.submitting ? <Loader2 className="size-4 animate-spin" /> : "Review & submit"}
+          {q.submitting || q.validating ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            "Review & submit"
+          )}
         </Button>
       </div>
 

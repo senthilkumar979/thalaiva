@@ -30,8 +30,6 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
   const [newCaptainId, setNewCaptainId] = useState('')
   const [newViceCaptainId, setNewViceCaptainId] = useState('')
 
-  console.log('entry', entry)
-
   const refresh = useCallback(() => {
     fetch(`/api/competitions/${competitionId}/entries/me`)
       .then((r) => r.json())
@@ -62,6 +60,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
       ...((entry.tier1Players as {
         _id: unknown
         name: string
+        role: string
         franchise: {
           _id: string
           name: string
@@ -72,6 +71,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
       ...((entry.tier2Players as {
         _id: unknown
         name: string
+        role: string
         franchise: {
           _id: string
           name: string
@@ -82,6 +82,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
       ...((entry.tier3Players as {
         _id: unknown
         name: string
+        role: string
         franchise: {
           _id: string
           name: string
@@ -94,6 +95,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
       name: p.name,
       _id: normalizePlayerId(p._id),
       franchise: p.franchise,
+      role: p.role,
     }))
   }, [entry])
 

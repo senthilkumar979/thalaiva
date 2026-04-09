@@ -4,4 +4,6 @@ export interface PendingSwapRow {
   playerInId: string;
   playerOutName: string;
   playerInName: string;
+  playerOutFranchiseId: string;
+  playerInFranchiseId: string;
 }

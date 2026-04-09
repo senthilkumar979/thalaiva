@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { connectDb, isMongoTransactionUnsupportedError } from "@/lib/db";
+import { connectDb } from "@/lib/db";
 import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
-import { executeEntrySwaps } from "@/lib/executeEntrySwaps";
+import { validateSwapRequest } from "@/lib/executeEntrySwaps";
 import { requireUser } from "@/lib/session";
 import { Competition } from "@/models/Competition";
 import { Entry } from "@/models/Entry";
@@ -32,6 +32,7 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+/** Dry-run swap validation (same rules as POST …/swap, no writes). */
 export async function POST(req: Request, { params }: RouteParams) {
   try {
     const session = await requireUser();
@@ -68,49 +69,13 @@ export async function POST(req: Request, { params }: RouteParams) {
       newViceCaptainId: parsed.data.newViceCaptainId,
     };
 
-    const sessionDb = await mongoose.startSession();
-    let transactionStarted = false;
-    try {
-      sessionDb.startTransaction();
-      transactionStarted = true;
-    } catch (e) {
-      sessionDb.endSession();
-      if (!isMongoTransactionUnsupportedError(e)) throw e;
-      await executeEntrySwaps(swapPayload, undefined);
-    }
-    if (transactionStarted) {
-      let sessionEnded = false;
-      try {
-        await executeEntrySwaps(swapPayload, sessionDb);
-        await sessionDb.commitTransaction();
-      } catch (e) {
-        await sessionDb.abortTransaction().catch(() => {});
-        sessionDb.endSession();
-        sessionEnded = true;
-        if (isMongoTransactionUnsupportedError(e)) {
-          await executeEntrySwaps(swapPayload, undefined);
-        } else {
-          throw e;
-        }
-      }
-      if (!sessionEnded) {
-        sessionDb.endSession();
-      }
-    }
+    await validateSwapRequest(swapPayload, undefined);
 
-    const fresh = await Entry.findById(entry._id)
-      .populate("tier1Players", "name franchise tier role")
-      .populate("tier2Players", "name franchise tier role")
-      .populate("tier3Players", "name franchise tier role")
-      .populate("captain", "name franchise tier role")
-      .populate("viceCaptain", "name franchise tier role")
-      .lean();
-
-    return NextResponse.json({ entry: fresh });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     const err = e as Error & { status?: number };
     if (err.status) return NextResponse.json({ error: err.message }, { status: err.status });
     console.error(e);
-    return NextResponse.json({ error: (e as Error).message ?? "Swap failed" }, { status: 400 });
+    return NextResponse.json({ error: (e as Error).message ?? "Validation failed" }, { status: 400 });
   }
 }

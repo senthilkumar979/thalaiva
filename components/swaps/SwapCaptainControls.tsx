@@ -1,5 +1,6 @@
 "use client";
 
+import { labelForPlayerId, normalizePlayerId, type PlayerOption } from "@/components/swaps/swapSelectLabels";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { labelForPlayerId, normalizePlayerId, type PlayerOption } from "@/components/swaps/swapSelectLabels";
 import Image from "next/image";
+import { IPL_ROLE_ICON_SVG } from "../../lib/iplRoleIcons";
 
 interface SwapCaptainControlsProps {
   squad: PlayerOption[];
@@ -57,7 +58,10 @@ export const SwapCaptainControls = ({
             {squad.map((p) => (
               <SelectItem key={normalizePlayerId(p._id)} value={normalizePlayerId(p._id)}>
                 <div className="flex justify-between gap-2 w-full">
-                  {p.name}
+                  <div className="flex items-center gap-2">
+                  <Image src={IPL_ROLE_ICON_SVG[p.role as keyof typeof IPL_ROLE_ICON_SVG]} alt={p.role} width={20} height={20} />
+                    {p.name}
+                    </div>
                   <div className="flex items-center gap-2">
                     <Image src={p.franchise?.logoUrl} alt={p.franchise?.name} width={20} height={20} />
                     <span className="">{p.franchise?.shortCode ?? "Unknown"}</span>
@@ -82,8 +86,11 @@ export const SwapCaptainControls = ({
             {squad.map((p) => (
               <SelectItem key={`vc-${normalizePlayerId(p._id)}`} value={normalizePlayerId(p._id)}>
                 <div className="flex justify-between gap-2 w-full">
-                  {p.name}
                   <div className="flex items-center gap-2">
+                  <Image src={IPL_ROLE_ICON_SVG[p.role as keyof typeof IPL_ROLE_ICON_SVG]} alt={p.role} width={20} height={20} />
+                    {p.name}
+                    </div>
+                  <div className="flex items-center justify-between gap-2">
                     <Image src={p.franchise?.logoUrl} alt={p.franchise?.name} width={20} height={20} />
                     <span className="">{p.franchise?.shortCode ?? "Unknown"}</span>
                   </div>
