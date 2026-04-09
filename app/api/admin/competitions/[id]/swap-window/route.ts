@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
-import { countScoredMatches } from "@/lib/swapEffectiveMatch";
 import { Competition } from "@/models/Competition";
 import { SwapWindow } from "@/models/SwapWindow";
 
@@ -33,14 +32,14 @@ export async function POST(req: Request, { params }: RouteParams) {
       if (comp.swapWindowOpen) {
         return NextResponse.json({ error: "Swap window is already open" }, { status: 400 });
       }
-      const scoredMatches = await countScoredMatches();
-      const blockSequence = Math.floor(scoredMatches / 15);
-      if (blockSequence < 1) {
-        return NextResponse.json(
-          { error: "At least 15 matches must be scored before opening a swap window" },
-          { status: 400 }
-        );
-      }
+      // const scoredMatches = await countScoredMatches();
+      const blockSequence = 1;
+      // if (blockSequence < 1) {
+      //   return NextResponse.json(
+      //     { error: "At least 15 matches must be scored before opening a swap window" },
+      //     { status: 400 }
+      //   );
+      // }
 
       const [win] = await SwapWindow.create([
         {
@@ -57,7 +56,7 @@ export async function POST(req: Request, { params }: RouteParams) {
 
       return NextResponse.json({
         swapWindow: win,
-        scoredMatches,
+        // scoredMatches,
         blockSequence,
       });
     }

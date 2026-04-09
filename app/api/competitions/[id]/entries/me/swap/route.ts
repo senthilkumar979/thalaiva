@@ -8,19 +8,25 @@ import { requireUser } from "@/lib/session";
 import { Competition } from "@/models/Competition";
 import { Entry } from "@/models/Entry";
 
-const bodySchema = z.object({
-  swaps: z
-    .array(
-      z.object({
-        tierSlot: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-        playerOutId: z.string().min(1),
-        playerInId: z.string().min(1),
-      })
-    )
-    .min(1),
-  newCaptainId: z.string().optional(),
-  newViceCaptainId: z.string().optional(),
+const swapItemSchema = z.object({
+  tierSlot: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  playerOutId: z.string().min(1),
+  playerInId: z.string().min(1),
 });
+
+const bodySchema = z
+  .object({
+    swaps: z.array(swapItemSchema).default([]),
+    newCaptainId: z.string().optional(),
+    newViceCaptainId: z.string().optional(),
+  })
+  .refine(
+    (d) =>
+      d.swaps.length > 0 ||
+      Boolean(d.newCaptainId?.trim()) ||
+      Boolean(d.newViceCaptainId?.trim()),
+    { message: "Provide at least one player swap or a captain/vice-captain change" }
+  );
 
 interface RouteParams {
   params: Promise<{ id: string }>;

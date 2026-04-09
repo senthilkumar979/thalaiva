@@ -1,52 +1,101 @@
-"use client";
+'use client'
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
-import { CompetitionSubpageShell } from "@/components/competitions/CompetitionSubpageShell";
-import { SwapAuditTable } from "@/components/swaps/SwapAuditTable";
-import { SwapEntryActions } from "@/components/swaps/SwapEntryActions";
-import { SwapStatusCard } from "@/components/swaps/SwapStatusCard";
-import { useSwapEligibility } from "@/hooks/useSwapEligibility";
+import { CompetitionBreadcrumb } from '@/components/competitions/CompetitionBreadcrumb'
+import { CompetitionSubpageShell } from '@/components/competitions/CompetitionSubpageShell'
+import { SwapAuditTable } from '@/components/swaps/SwapAuditTable'
+import { SwapEntryActions } from '@/components/swaps/SwapEntryActions'
+import { SwapQueueBoard } from '@/components/swaps/SwapQueueDialog'
+import { normalizePlayerId } from '@/components/swaps/swapSelectLabels'
+import { SwapStatusCard } from '@/components/swaps/SwapStatusCard'
+import { useSwapEligibility } from '@/hooks/useSwapEligibility'
+import type { SwapQueueEntry } from '@/hooks/useSwapQueue'
+import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface SwapPageClientProps {
-  competitionId: string;
+  competitionId: string
 }
 
 export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
-  const { data: eligibility, loading: elLoading, error: elError, refetch: refetchEligibility } =
-    useSwapEligibility(competitionId);
-  const [entry, setEntry] = useState<Record<string, unknown> | null>(null);
-  const [auditRows, setAuditRows] = useState<unknown[]>([]);
-  const [compName, setCompName] = useState<string>("League");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [newCaptainId, setNewCaptainId] = useState("");
-  const [newViceCaptainId, setNewViceCaptainId] = useState("");
+  const {
+    data: eligibility,
+    loading: elLoading,
+    error: elError,
+    refetch: refetchEligibility,
+  } = useSwapEligibility(competitionId)
+  const [entry, setEntry] = useState<Record<string, unknown> | null>(null)
+  const [auditRows, setAuditRows] = useState<unknown[]>([])
+  const [compName, setCompName] = useState<string>('League')
+  const [newCaptainId, setNewCaptainId] = useState('')
+  const [newViceCaptainId, setNewViceCaptainId] = useState('')
+
+  console.log('entry', entry)
 
   const refresh = useCallback(() => {
     fetch(`/api/competitions/${competitionId}/entries/me`)
       .then((r) => r.json())
       .then((j) => setEntry(j))
-      .catch(() => setEntry(null));
+      .catch(() => setEntry(null))
     fetch(`/api/competitions/${competitionId}/swap/audit`)
       .then((r) => r.json())
       .then((j) => setAuditRows(Array.isArray(j.rows) ? j.rows : []))
-      .catch(() => setAuditRows([]));
-  }, [competitionId]);
+      .catch(() => setAuditRows([]))
+  }, [competitionId])
 
   useEffect(() => {
     fetch(`/api/competitions/${competitionId}`)
       .then((r) => r.json())
       .then((c) => {
-        if (c?.name) setCompName(String(c.name));
+        if (c?.name) setCompName(String(c.name))
       })
-      .catch(() => {});
-  }, [competitionId]);
+      .catch(() => {})
+  }, [competitionId])
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    refresh()
+  }, [refresh])
+
+  const squad = useMemo(() => {
+    if (!entry) return []
+    const rows = [
+      ...((entry.tier1Players as {
+        _id: unknown
+        name: string
+        franchise: {
+          _id: string
+          name: string
+          shortCode: string
+          logoUrl: string
+        }
+      }[]) ?? []),
+      ...((entry.tier2Players as {
+        _id: unknown
+        name: string
+        franchise: {
+          _id: string
+          name: string
+          shortCode: string
+          logoUrl: string
+        }
+      }[]) ?? []),
+      ...((entry.tier3Players as {
+        _id: unknown
+        name: string
+        franchise: {
+          _id: string
+          name: string
+          shortCode: string
+          logoUrl: string
+        }
+      }[]) ?? []),
+    ]
+    return rows.map((p) => ({
+      name: p.name,
+      _id: normalizePlayerId(p._id),
+      franchise: p.franchise,
+    }))
+  }, [entry])
 
   if (elLoading || !eligibility) {
     return (
@@ -55,7 +104,7 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
           <Loader2 className="size-8 animate-spin" />
         </div>
       </CompetitionSubpageShell>
-    );
+    )
   }
 
   if (elError) {
@@ -63,16 +112,8 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
       <CompetitionSubpageShell>
         <p className="py-12 text-center text-sm text-red-300">{elError}</p>
       </CompetitionSubpageShell>
-    );
+    )
   }
-
-  const squad = entry
-    ? [
-        ...((entry.tier1Players as { _id: string; name: string }[]) ?? []),
-        ...((entry.tier2Players as { _id: string; name: string }[]) ?? []),
-        ...((entry.tier3Players as { _id: string; name: string }[]) ?? []),
-      ]
-    : [];
 
   return (
     <CompetitionSubpageShell>
@@ -80,19 +121,26 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
         <CompetitionBreadcrumb
           variant="dark"
           items={[
-            { label: "Home", href: "/" },
-            { label: "Competitions", href: "/competitions" },
+            { label: 'Home', href: '/' },
+            { label: 'Competitions', href: '/competitions' },
             { label: compName, href: `/competitions/${competitionId}` },
-            { label: "My team", href: `/competitions/${competitionId}/my-team` },
-            { label: "Player swaps" },
+            {
+              label: 'My team',
+              href: `/competitions/${competitionId}/my-team`,
+            },
+            { label: 'Player swaps' },
           ]}
         />
 
         <header className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Player swaps</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Player swaps
+          </h1>
           <p className="max-w-2xl text-sm text-white/65">
-            Same-tier swaps only. Up to six per tournament. Points for new picks count from the next
-            match in schedule order. History is kept below per swap window.
+            Same-tier swaps only: up to six player changes per competition (two
+            per squad tier slot), with score penalties per swap. You may change
+            captain or vice-captain once total (−200). New picks count from the
+            next match in schedule order. History is below per window.
           </p>
         </header>
 
@@ -103,17 +151,32 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
           entry={entry}
           eligibility={eligibility}
           squad={squad}
-          dialogOpen={dialogOpen}
-          onDialogOpenChange={setDialogOpen}
           newCaptainId={newCaptainId}
           newViceCaptainId={newViceCaptainId}
-          onCaptainChange={setNewCaptainId}
-          onViceChange={setNewViceCaptainId}
-          onSwapSuccess={() => {
-            refresh();
-            refetchEligibility();
+          onCaptainChange={(v) => {
+            setNewCaptainId(v)
+            if (v) setNewViceCaptainId('')
+          }}
+          onViceChange={(v) => {
+            setNewViceCaptainId(v)
+            if (v) setNewCaptainId('')
           }}
         />
+
+        {entry && eligibility.canSwap ? (
+          <SwapQueueBoard
+            competitionId={competitionId}
+            entry={(entry as unknown) as SwapQueueEntry}
+            eligibility={eligibility}
+            squad={squad}
+            newCaptainId={newCaptainId}
+            newViceCaptainId={newViceCaptainId}
+            onSuccess={() => {
+              refresh()
+              refetchEligibility()
+            }}
+          />
+        ) : null}
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-white">Audit log</h2>
@@ -128,5 +191,5 @@ export const SwapPageClient = ({ competitionId }: SwapPageClientProps) => {
         </Link>
       </div>
     </CompetitionSubpageShell>
-  );
-};
+  )
+}

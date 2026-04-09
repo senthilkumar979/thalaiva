@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { Entry } from "@/models/Entry";
+import { Franchise } from "../../../../../../models/Franchise";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -17,13 +18,31 @@ export async function GET(_req: Request, { params }: RouteParams) {
       .populate("tier2Players", "name franchise tier role")
       .populate("tier3Players", "name franchise tier role")
       .populate("captain", "name franchise tier role")
-      .populate(
-        "viceCaptain",
-        "name franchise tier role"
-      )
+      .populate("viceCaptain", "name franchise tier role")
       .lean();
+    const franchises = await Franchise.find().lean();
+
+    const mapPlayersWithFranchises = (players: unknown[] | undefined) => players?.map((p: unknown) => ({
+      ...(p as { name: string; franchise: string }),
+      franchise: franchises.find((f) => f._id.toString() === String((p as { franchise: string }).franchise ?? "")),
+    })) ?? []
+
+    const mapPlayerWithFranchise = (player: unknown) => ({
+      ...(player as { name: string; franchise: string }),
+      franchise: franchises.find((f) => f._id.toString() === String((player as { franchise: string }).franchise ?? "")),
+    })
+
+    const entryWithFranchises = {
+      ...entry,
+      tier1Players: mapPlayersWithFranchises(entry?.tier1Players ?? []),
+      tier2Players: mapPlayersWithFranchises(entry?.tier2Players ?? []),
+      tier3Players: mapPlayersWithFranchises(entry?.tier3Players ?? []),
+      captain: mapPlayerWithFranchise(entry?.captain),
+      viceCaptain: mapPlayerWithFranchise(entry?.viceCaptain),
+    }
+
     if (!entry) return NextResponse.json(null);
-    return NextResponse.json(entry);
+    return NextResponse.json(entryWithFranchises);
   } catch (e) {
     const err = e as Error & { status?: number };
     if (err.status) return NextResponse.json({ error: err.message }, { status: err.status });

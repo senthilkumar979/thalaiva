@@ -5,12 +5,17 @@ export interface IEntrySwapAudit {
   competition: Types.ObjectId;
   entry: Types.ObjectId;
   user: Types.ObjectId;
-  /** 1 = tier1 (fantasy tier 1), 2 = tier2 (player tier 3), 3 = tier3 (player tier 5). */
-  tierSlot: 1 | 2 | 3;
-  playerOut: Types.ObjectId;
-  playerIn: Types.ObjectId;
+  /** player | leadership-only row (captain/vice change). */
+  recordKind?: "player" | "leadership";
+  /** 1–3 = tier slot; 0 = leadership-only record. */
+  tierSlot: 0 | 1 | 2 | 3;
+  /** Omitted for some leadership rows (e.g. first vice-captain assignment). */
+  playerOut?: Types.ObjectId;
+  playerIn?: Types.ObjectId;
   effectiveFromMatchNumber: number;
   swapsRemainingAfter: number;
+  /** Points deducted for this line (negative). */
+  penaltyPoints: number;
   captainUpdated: boolean;
   viceCaptainUpdated: boolean;
 }
@@ -25,11 +30,13 @@ const EntrySwapAuditSchema = new Schema<IEntrySwapAudit>(
     competition: { type: Schema.Types.ObjectId, ref: "Competition", required: true },
     entry: { type: Schema.Types.ObjectId, ref: "Entry", required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    tierSlot: { type: Number, enum: [1, 2, 3], required: true },
-    playerOut: { type: Schema.Types.ObjectId, ref: "Player", required: true },
-    playerIn: { type: Schema.Types.ObjectId, ref: "Player", required: true },
+    recordKind: { type: String, enum: ["player", "leadership"], default: "player" },
+    tierSlot: { type: Number, enum: [0, 1, 2, 3], required: true },
+    playerOut: { type: Schema.Types.ObjectId, ref: "Player", required: false },
+    playerIn: { type: Schema.Types.ObjectId, ref: "Player", required: false },
     effectiveFromMatchNumber: { type: Number, required: true },
     swapsRemainingAfter: { type: Number, required: true, min: 0, max: 6 },
+    penaltyPoints: { type: Number, required: true, default: 0 },
     captainUpdated: { type: Boolean, default: false },
     viceCaptainUpdated: { type: Boolean, default: false },
   },

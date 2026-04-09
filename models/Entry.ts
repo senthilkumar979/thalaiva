@@ -12,12 +12,18 @@ export interface IEntry {
   /** Set on all new submissions; older entries may omit until updated. */
   viceCaptain?: Types.ObjectId;
   totalScore: number;
-  /** Player swaps used in this competition (max 6). */
+  /** @deprecated Sum of tier slot swaps; kept for migration / display. */
   swapCountUsed?: number;
-  /** Captain changed at most once per competition (during a swap window). */
+  /** Player swaps per fantasy tier slot (max 2 each; slots 1/2/3 = player tiers 1/3/5). */
+  swapsUsedTierSlot1?: number;
+  swapsUsedTierSlot2?: number;
+  swapsUsedTierSlot3?: number;
+  /** @deprecated Use leadershipChangeUsed. */
   captainChangeUsed?: boolean;
-  /** Vice-captain changed at most once per competition (during a swap window). */
+  /** @deprecated Use leadershipChangeUsed. */
   viceCaptainChangeUsed?: boolean;
+  /** True after captain OR vice-captain assignment was changed once (single leadership change per competition). */
+  leadershipChangeUsed?: boolean;
 }
 
 export interface IEntryDocument extends IEntry {
@@ -36,8 +42,12 @@ const EntrySchema = new Schema<IEntry>(
     viceCaptain: { type: Schema.Types.ObjectId, ref: "Player", required: false },
     totalScore: { type: Number, default: 0 },
     swapCountUsed: { type: Number, default: 0 },
+    swapsUsedTierSlot1: { type: Number, default: 0, min: 0, max: 2 },
+    swapsUsedTierSlot2: { type: Number, default: 0, min: 0, max: 2 },
+    swapsUsedTierSlot3: { type: Number, default: 0, min: 0, max: 2 },
     captainChangeUsed: { type: Boolean, default: false },
     viceCaptainChangeUsed: { type: Boolean, default: false },
+    leadershipChangeUsed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

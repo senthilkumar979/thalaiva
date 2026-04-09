@@ -2,6 +2,7 @@ import type { ClientSession } from "mongoose";
 import type { Types } from "mongoose";
 import { EntryRosterVersion } from "@/models/EntryRosterVersion";
 import type { IEntry } from "@/models/Entry";
+import { hasAnyPlayerSwap } from "@/lib/swapPenaltyRules";
 
 function snapshotFromEntry(entry: IEntry): {
   tier1Players: Types.ObjectId[];
@@ -24,8 +25,7 @@ export async function syncRosterVersionFromEntryIfNoSwaps(
   entry: IEntry & { _id: Types.ObjectId },
   session?: ClientSession
 ): Promise<void> {
-  const used = entry.swapCountUsed ?? 0;
-  if (used > 0) return;
+  if (hasAnyPlayerSwap(entry)) return;
 
   const snap = snapshotFromEntry(entry);
   const op = EntryRosterVersion.findOneAndUpdate(

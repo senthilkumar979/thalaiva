@@ -12,13 +12,15 @@ import {
 interface AuditRow {
   _id: string;
   createdAt?: string;
+  recordKind?: string;
   tierSlot: number;
   effectiveFromMatchNumber: number;
   swapsRemainingAfter: number;
+  penaltyPoints?: number;
   captainUpdated?: boolean;
   viceCaptainUpdated?: boolean;
-  playerOut: { name?: string } | null;
-  playerIn: { name?: string } | null;
+  playerOut?: { name?: string } | null;
+  playerIn?: { name?: string } | null;
   swapWindow?: { blockSequence?: number; openedAt?: string } | null;
 }
 
@@ -43,6 +45,7 @@ export const SwapAuditTable = ({ rows }: SwapAuditTableProps) => {
             <TableHead className="text-white/70">When</TableHead>
             <TableHead className="text-white/70">Window</TableHead>
             <TableHead className="text-white/70">Tier</TableHead>
+            <TableHead className="text-white/70">Penalty</TableHead>
             <TableHead className="text-white/70">Out → In</TableHead>
             <TableHead className="text-white/70">From match #</TableHead>
             <TableHead className="text-white/70">Swaps left</TableHead>
@@ -58,9 +61,15 @@ export const SwapAuditTable = ({ rows }: SwapAuditTableProps) => {
               <TableCell className="text-white/80">
                 Block {r.swapWindow?.blockSequence ?? "—"}
               </TableCell>
-              <TableCell className="text-white/80">{r.tierSlot}</TableCell>
+              <TableCell className="text-white/80">
+                {r.tierSlot === 0 || r.recordKind === "leadership" ? "Leadership" : r.tierSlot}
+              </TableCell>
+              <TableCell className="tabular-nums text-white/80">
+                {r.penaltyPoints != null ? r.penaltyPoints : "—"}
+              </TableCell>
               <TableCell className="text-white/90">
-                {r.playerOut?.name ?? "?"} → {r.playerIn?.name ?? "?"}
+                {r.playerOut?.name ?? (r.recordKind === "leadership" ? "—" : "?")} →{" "}
+                {r.playerIn?.name ?? "?"}
               </TableCell>
               <TableCell className="tabular-nums text-white/80">{r.effectiveFromMatchNumber}</TableCell>
               <TableCell className="tabular-nums text-white/80">{r.swapsRemainingAfter}</TableCell>
