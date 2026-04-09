@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Users } from 'lucide-react'
 import type { PlayerRole, PlayerTier } from '@/models/Player'
 import { cn } from '@/lib/utils'
+import { FranchiseRosterTeamLogo } from '@/components/home/FranchiseRosterTeamLogo'
 import { PlayerPoolCard } from './PlayerPoolCard'
 
 const TIER_ORDER: PlayerTier[] = [1, 3, 5]
@@ -37,36 +37,7 @@ interface FranchiseRosterCardProps {
     totalFantasyPoints: number
   }[]
   accentClass: string
-}
-
-function TeamLogo({
-  shortCode,
-  logoUrl,
-}: {
-  shortCode: string
-  logoUrl: string
-}) {
-  const [failed, setFailed] = useState(false)
-  const showFallback = !logoUrl || failed
-  if (showFallback) {
-    return (
-      <div
-        className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5 text-sm font-bold text-primary ring-1 ring-primary/15"
-        aria-hidden
-      >
-        {shortCode.slice(0, 2)}
-      </div>
-    )
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- external franchise URLs vary
-    <img
-      src={logoUrl}
-      alt=""
-      className="size-14 shrink-0 object-contain"
-      onError={() => setFailed(true)}
-    />
-  )
+  variant?: 'default' | 'hub'
 }
 
 export const FranchiseRosterCard = ({
@@ -75,30 +46,64 @@ export const FranchiseRosterCard = ({
   logoUrl,
   players,
   accentClass,
+  variant = 'default',
 }: FranchiseRosterCardProps) => {
+  const hub = variant === 'hub'
   return (
     <article
       className={cn(
-        'w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md',
+        'w-full overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-md',
         'border-l-4',
         accentClass,
+        hub
+          ? 'border-white/10 bg-white/[0.04] ring-1 ring-white/10 hover:shadow-white/5'
+          : 'border-border/80 bg-card hover:shadow-md',
       )}
     >
-      <header className="border-b border-border/60 bg-muted/25 px-5 py-5 sm:px-8 sm:py-6 flex items-center justify-between">
-        <div className="min-w-0 flex items-center gap-4">
-          <TeamLogo shortCode={shortCode} logoUrl={logoUrl} />
-          <h3 className="text-pretty text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+      <header
+        className={cn(
+          'flex flex-col gap-4 border-b px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-6',
+          hub
+            ? 'border-white/10 bg-white/[0.04]'
+            : 'border-border/60 bg-muted/25',
+        )}
+      >
+        <div className="min-w-0 flex flex-wrap items-center gap-4">
+          <FranchiseRosterTeamLogo shortCode={shortCode} logoUrl={logoUrl} />
+          <h3
+            className={cn(
+              'text-pretty text-xl font-semibold leading-snug tracking-tight sm:text-2xl',
+              hub && 'text-white',
+            )}
+          >
             {name}
           </h3>
-          <span className="rounded-md bg-background/90 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-primary font-bold ring-1 ring-border/80">
+          <span
+            className={cn(
+              'rounded-md px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider ring-1',
+              hub
+                ? 'bg-white/10 text-amber-200/95 ring-white/15'
+                : 'bg-background/90 text-primary ring-border/80',
+            )}
+          >
             {shortCode}
           </span>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <p
+            className={cn(
+              'flex items-center gap-2 text-sm',
+              hub ? 'text-white/55' : 'text-muted-foreground',
+            )}
+          >
             <Users className="size-4 shrink-0 opacity-80" aria-hidden />
             <span>
-              <span className="font-semibold tabular-nums text-foreground">
+              <span
+                className={cn(
+                  'font-semibold tabular-nums',
+                  hub ? 'text-white' : 'text-foreground',
+                )}
+              >
                 {players.length}
               </span>{' '}
               in pool
@@ -107,7 +112,7 @@ export const FranchiseRosterCard = ({
         </div>
       </header>
 
-      <div className="min-w-0">
+      <div className="min-w-0 bg-white rounded-b-2xl">
         <div className="flex flex-col gap-6 p-4 sm:p-5 lg:p-8">
           {TIER_ORDER.map((tier) => {
             const byTier = players
@@ -122,7 +127,12 @@ export const FranchiseRosterCard = ({
                 aria-labelledby={headingId}
                 className="min-w-0"
               >
-                <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-border/60 pb-2">
+                <div
+                  className={cn(
+                    'mb-3 flex flex-wrap items-center gap-2 border-b pb-2',
+                    hub ? 'border-white/10' : 'border-border/60',
+                  )}
+                >
                   <h4
                     id={headingId}
                     className={cn(
@@ -132,7 +142,12 @@ export const FranchiseRosterCard = ({
                   >
                     {meta.title}
                   </h4>
-                  <span className="text-[11px] tabular-nums text-muted-foreground">
+                  <span
+                    className={cn(
+                      'text-[11px] tabular-nums',
+                      hub ? 'text-white/45' : 'text-muted-foreground',
+                    )}
+                  >
                     {byTier.length} player{byTier.length === 1 ? '' : 's'}
                   </span>
                 </div>
@@ -144,6 +159,7 @@ export const FranchiseRosterCard = ({
                       tier={p.tier}
                       role={p.role}
                       totalFantasyPoints={p.totalFantasyPoints}
+                      variant={variant}
                     />
                   ))}
                 </div>

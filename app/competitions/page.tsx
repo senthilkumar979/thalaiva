@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Loader2, Trophy } from "lucide-react";
-import { toast } from "sonner";
 import { CompetitionBreadcrumb } from "@/components/competitions/CompetitionBreadcrumb";
 import { CompetitionLobbyCard, type LobbyCompetition } from "@/components/competitions/CompetitionLobbyCard";
 import { CompetitionsEmptyState } from "@/components/competitions/CompetitionsEmptyState";
-import { CreateCompetitionPanel } from "@/components/competitions/CreateCompetitionPanel";
+import { Loader2, Trophy } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function CompetitionsPage() {
   const router = useRouter();
   const { status } = useSession();
   const [list, setList] = useState<LobbyCompetition[]>([]);
   const [loading, setLoading] = useState(true);
-  const [name, setName] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [desc, setDesc] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +22,16 @@ export default function CompetitionsPage() {
       try {
         const res = await fetch("/api/competitions");
         const data = await res.json();
-        if (!cancelled && Array.isArray(data)) setList(data);
+        if (!cancelled && Array.isArray(data)) {
+          if (data.length > 1) {
+            setList(data);
+          } else if(data.length === 1) {
+            router.push(`/competitions/${data[0]._id}`);
+          } else {
+            toast.error("Could not load competitions");
+            setList([]);
+          }
+        }
       } catch {
         if (!cancelled) toast.error("Could not load competitions");
       } finally {
@@ -38,32 +43,32 @@ export default function CompetitionsPage() {
     };
   }, []);
 
-  const create = async () => {
-    if (!name.trim() || !deadline) {
-      toast.error("Name and entry deadline are required");
-      return;
-    }
-    const res = await fetch("/api/competitions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        description: desc,
-        entryDeadline: new Date(deadline).toISOString(),
-      }),
-    });
-    if (res.ok) {
-      const c = (await res.json()) as LobbyCompetition;
-      setList((prev) => [c, ...prev]);
-      setName("");
-      setDesc("");
-      setDeadline("");
-      toast.success("League created");
-      return;
-    }
-    const j = await res.json().catch(() => ({}));
-    toast.error(j.error ?? "Could not create competition");
-  };
+  // const create = async () => {
+  //   if (!name.trim() || !deadline) {
+  //     toast.error("Name and entry deadline are required");
+  //     return;
+  //   }
+  //   const res = await fetch("/api/competitions", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       name: name.trim(),
+  //       description: desc,
+  //       entryDeadline: new Date(deadline).toISOString(),
+  //     }),
+  //   });
+  //   if (res.ok) {
+  //     const c = (await res.json()) as LobbyCompetition;
+  //     setList((prev) => [c, ...prev]);
+  //     setName("");
+  //     setDesc("");
+  //     setDeadline("");
+  //     toast.success("League created");
+  //     return;
+  //   }
+  //   const j = await res.json().catch(() => ({}));
+  //   toast.error(j.error ?? "Could not create competition");
+  // };
 
   const join = async (id: string) => {
     await fetch(`/api/competitions/${id}/join`, { method: "POST" });
@@ -102,7 +107,7 @@ export default function CompetitionsPage() {
           </p>
         </header>
 
-        {isAuth && (
+        {/* {isAuth && (
           <CreateCompetitionPanel
             name={name}
             deadline={deadline}
@@ -112,7 +117,7 @@ export default function CompetitionsPage() {
             onDescriptionChange={setDesc}
             onSubmit={create}
           />
-        )}
+        )} */}
 
         <section className="space-y-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

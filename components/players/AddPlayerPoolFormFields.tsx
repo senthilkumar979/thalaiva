@@ -1,7 +1,10 @@
 "use client";
 
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
-import { ADMIN_MATCH_SELECT_CLASS } from "@/components/admin/adminCreateMatchShared";
+import {
+  ADMIN_MATCH_SELECT_CLASS,
+  ADMIN_MATCH_SELECT_CLASS_IPL,
+} from "@/components/admin/adminCreateMatchShared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,23 +29,38 @@ interface AddPlayerPoolFormFieldsProps {
   errors: FieldErrors<PlayerCreateFormValues>;
   franchises: FranchiseOption[];
   isSubmitting: boolean;
+  /** Dark glass fields (e.g. /players hub). */
+  appearance?: "default" | "hub";
 }
 
 const errCls = "text-sm text-destructive";
+
+const hubInput =
+  "bg-white/[0.06] border-white/15 text-white placeholder:text-white/40 focus-visible:ring-amber-400/30";
 
 export const AddPlayerPoolFormFields = ({
   register,
   errors,
   franchises,
   isSubmitting,
-}: AddPlayerPoolFormFieldsProps) => (
+  appearance = "default",
+}: AddPlayerPoolFormFieldsProps) => {
+  const hub = appearance === "hub";
+  const selectClass = cn(
+    "max-w-full",
+    hub ? ADMIN_MATCH_SELECT_CLASS_IPL : ADMIN_MATCH_SELECT_CLASS
+  );
+  const labelCls = hub ? "text-white/70" : undefined;
+  return (
   <>
     <div className="space-y-2">
-      <Label htmlFor="pool-player-name">Player name</Label>
+      <Label htmlFor="pool-player-name" className={labelCls}>
+        Player name
+      </Label>
       <Input
         id="pool-player-name"
         autoComplete="off"
-        className="max-w-md"
+        className={cn("max-w-md", hub && hubInput)}
         {...register("name")}
         aria-invalid={errors.name ? "true" : "false"}
       />
@@ -51,10 +69,12 @@ export const AddPlayerPoolFormFields = ({
 
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-2">
-        <Label htmlFor="pool-franchise">Franchise</Label>
+        <Label htmlFor="pool-franchise" className={labelCls}>
+          Franchise
+        </Label>
         <select
           id="pool-franchise"
-          className={cn(ADMIN_MATCH_SELECT_CLASS, "max-w-full")}
+          className={selectClass}
           {...register("franchiseId")}
           aria-invalid={errors.franchiseId ? "true" : "false"}
         >
@@ -68,10 +88,12 @@ export const AddPlayerPoolFormFields = ({
         {errors.franchiseId ? <p className={errCls}>{errors.franchiseId.message}</p> : null}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="pool-tier">Tier</Label>
+        <Label htmlFor="pool-tier" className={labelCls}>
+          Tier
+        </Label>
         <select
           id="pool-tier"
-          className={cn(ADMIN_MATCH_SELECT_CLASS, "max-w-full")}
+          className={selectClass}
           {...register("tier")}
           aria-invalid={errors.tier ? "true" : "false"}
         >
@@ -82,10 +104,12 @@ export const AddPlayerPoolFormFields = ({
         {errors.tier ? <p className={errCls}>{errors.tier.message}</p> : null}
       </div>
       <div className="space-y-2 sm:col-span-2 lg:col-span-2">
-        <Label htmlFor="pool-role">Role</Label>
+        <Label htmlFor="pool-role" className={labelCls}>
+          Role
+        </Label>
         <select
           id="pool-role"
-          className={cn(ADMIN_MATCH_SELECT_CLASS, "max-w-full")}
+          className={selectClass}
           {...register("role")}
           aria-invalid={errors.role ? "true" : "false"}
         >
@@ -99,8 +123,16 @@ export const AddPlayerPoolFormFields = ({
       </div>
     </div>
 
-    <Button type="submit" disabled={isSubmitting} className="min-w-[140px]">
+    <Button
+      type="submit"
+      disabled={isSubmitting}
+      className={cn(
+        "min-w-[140px]",
+        hub && "bg-amber-500 text-white hover:bg-amber-400"
+      )}
+    >
       {isSubmitting ? "Saving…" : "Add player"}
     </Button>
   </>
-);
+  );
+};

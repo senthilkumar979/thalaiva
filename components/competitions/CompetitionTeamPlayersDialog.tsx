@@ -98,7 +98,7 @@ export const CompetitionTeamPlayersDialog = ({
       <DialogContent
         className={cn(
           "flex max-h-[min(92vh,880px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl lg:max-w-5xl",
-          "border-white/15 bg-black/[10] text-white shadow-2xl ring-1 ring-white/10 sm:rounded-2xl",
+          "border-white/15 bg-blue-950/[10] text-white shadow-2xl ring-1 ring-white/10 sm:rounded-2xl",
           "[&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white [&_[data-slot=dialog-close]]:opacity-100"
         )}
       >

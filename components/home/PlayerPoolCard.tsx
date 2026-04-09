@@ -1,9 +1,9 @@
 'use client'
 
 import { IPL_ROLE_ICON_SVG } from '@/lib/iplRoleIcons'
+import { PlayerPoolTierStars } from '@/components/home/PlayerPoolTierStars'
 import { cn } from '@/lib/utils'
 import type { PlayerRole, PlayerTier } from '@/models/Player'
-import { Star } from 'lucide-react'
 
 const ROLE_CONFIG: Record<
   PlayerRole,
@@ -49,39 +49,12 @@ const ROLE_CONFIG: Record<
   },
 }
 
-function TierStars({ tier }: { tier: PlayerTier }) {
-  const filled = tier
-  return (
-    <div
-      className="flex items-center gap-1.5"
-      title={`Draft tier ${tier} (${filled} star${filled === 1 ? '' : 's'})`}
-    >
-      <span className="flex gap-px" aria-hidden>
-        {Array.from({ length: 5 }, (_, i) => (
-          <Star
-            key={i}
-            className={cn(
-              'size-3 shrink-0',
-              i < filled
-                ? 'fill-amber-400 text-amber-500 drop-shadow-[0_0_6px_rgba(251,191,36,0.35)]'
-                : 'fill-muted/25 text-muted-foreground/30',
-            )}
-            strokeWidth={i < filled ? 0 : 1}
-          />
-        ))}
-      </span>
-      <span className="text-[9px] font-bold tabular-nums tracking-wide text-muted-foreground">
-        T{tier}
-      </span>
-    </div>
-  )
-}
-
 interface PlayerPoolCardProps {
   name: string
   tier: PlayerTier
   role: PlayerRole
   totalFantasyPoints: number
+  variant?: 'default' | 'hub'
 }
 
 export const PlayerPoolCard = ({
@@ -89,14 +62,19 @@ export const PlayerPoolCard = ({
   tier,
   role,
   totalFantasyPoints,
+  variant = 'default',
 }: PlayerPoolCardProps) => {
+  const hub = variant === 'hub'
   const cfg = ROLE_CONFIG[role]
   const roleIconSrc = IPL_ROLE_ICON_SVG[role]
 
   return (
     <article
       className={cn(
-        'flex min-w-0 flex-col rounded-xl border bg-card/95 p-2.5 shadow-sm ring-1 ring-border/60 transition hover:shadow-md hover:ring-2',
+        'flex min-w-0 flex-col rounded-xl border p-2.5 shadow-sm transition hover:shadow-md hover:ring-2',
+        hub
+          ? 'border-white/10 bg-white/[0.06] ring-1 ring-white/10'
+          : 'bg-card/95 ring-1 ring-border/60',
         cfg.ring,
       )}
     >
@@ -133,11 +111,26 @@ export const PlayerPoolCard = ({
       >
         {name}
       </h4>
-      <div className="mt-2 space-y-1.5 border-t border-border/60 pt-2">
-        <TierStars tier={tier} />
-        <p className="flex items-baseline justify-between gap-2 text-[10px] text-muted-foreground">
+      <div
+        className={cn(
+          'mt-2 space-y-1.5 border-t pt-2',
+          hub ? 'border-white/10' : 'border-border/60',
+        )}
+      >
+        <PlayerPoolTierStars tier={tier} hub={hub} />
+        <p
+          className={cn(
+            'flex items-baseline justify-between gap-2 text-[10px]',
+            hub ? 'text-black/[0.5]' : 'text-muted-foreground',
+          )}
+        >
           <span>Fantasy pts</span>
-          <span className="font-semibold tabular-nums text-foreground">
+          <span
+            className={cn(
+              'font-semibold tabular-nums',
+              hub ? 'text-black/[0.9]' : 'text-foreground',
+            )}
+          >
             {totalFantasyPoints.toLocaleString()}
           </span>
         </p>

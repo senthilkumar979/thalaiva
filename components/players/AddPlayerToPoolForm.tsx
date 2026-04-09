@@ -15,6 +15,7 @@ import {
   toPlayerCreatePayload,
   type PlayerCreateFormValues,
 } from "@/lib/validators/playerCreate";
+import { cn } from "@/lib/utils";
 
 interface FranchiseOption {
   _id: string;
@@ -22,7 +23,12 @@ interface FranchiseOption {
   shortCode: string;
 }
 
-export const AddPlayerToPoolForm = () => {
+interface AddPlayerToPoolFormProps {
+  /** Matches competitions /players hub shell. */
+  variant?: "default" | "hub";
+}
+
+export const AddPlayerToPoolForm = ({ variant = "default" }: AddPlayerToPoolFormProps) => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [franchises, setFranchises] = useState<FranchiseOption[]>([]);
@@ -62,11 +68,19 @@ export const AddPlayerToPoolForm = () => {
     };
   }, []);
 
+  const hub = variant === "hub";
+  const cardShell = hub
+    ? "border-white/15 bg-white/[0.04] text-white shadow-2xl ring-1 ring-white/10"
+    : "border-border/80 shadow-sm";
+
   if (status === "loading") {
     return (
-      <Card className="border-border/80 shadow-sm">
+      <Card className={cardShell}>
         <CardContent className="flex min-h-[200px] items-center justify-center py-12">
-          <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+          <Loader2
+            className={cn("size-8 animate-spin", hub ? "text-white/50" : "text-muted-foreground")}
+            aria-hidden
+          />
         </CardContent>
       </Card>
     );
@@ -91,15 +105,27 @@ export const AddPlayerToPoolForm = () => {
   };
 
   return (
-    <Card className="border-border/80 shadow-sm">
-      <CardHeader className="border-b border-border/60 bg-muted/25">
+    <Card className={cardShell}>
+      <CardHeader
+        className={cn(
+          "border-b",
+          hub ? "border-white/10 bg-white/[0.04]" : "border-border/60 bg-muted/25"
+        )}
+      >
         <div className="flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-lg border border-border bg-background">
-            <UserPlus className="size-4 text-foreground/80" aria-hidden />
+          <span
+            className={cn(
+              "flex size-9 items-center justify-center rounded-lg border",
+              hub
+                ? "border-amber-400/25 bg-white/[0.08] text-amber-200/90"
+                : "border-border bg-background text-foreground/80"
+            )}
+          >
+            <UserPlus className="size-4" aria-hidden />
           </span>
           <div>
-            <CardTitle className="text-lg">Add player to pool</CardTitle>
-            <CardDescription>
+            <CardTitle className={cn("text-lg", hub && "text-white")}>Add player to pool</CardTitle>
+            <CardDescription className={hub ? "text-white/55" : undefined}>
               Name, franchise, tier, and role are validated before saving.
             </CardDescription>
           </div>
@@ -108,7 +134,10 @@ export const AddPlayerToPoolForm = () => {
       <CardContent className="pt-6">
         {franchisesLoading ? (
           <div className="flex min-h-[180px] items-center justify-center">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
+            <Loader2
+              className={cn("size-8 animate-spin", hub ? "text-white/50" : "text-muted-foreground")}
+              aria-hidden
+            />
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
@@ -117,6 +146,7 @@ export const AddPlayerToPoolForm = () => {
               errors={errors}
               franchises={franchises}
               isSubmitting={isSubmitting}
+              appearance={hub ? "hub" : "default"}
             />
           </form>
         )}

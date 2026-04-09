@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Filter, Search } from "lucide-react";
 import type { PlayerTier } from "@/models/Player";
-import { Input } from "@/components/ui/input";
 import type { HomeFranchiseGroup } from "@/lib/queries/homePlayers";
 import { cn } from "@/lib/utils";
 import { FranchiseRosterCard } from "./FranchiseRosterCard";
+import { PlayersExplorerToolbar } from "./PlayersExplorerToolbar";
 
 const ACCENT_LEFT = [
   "border-l-sky-500",
@@ -29,11 +28,14 @@ type TierFilter = "all" | PlayerTier;
 
 interface HomePlayersExplorerProps {
   teams: HomeFranchiseGroup[];
+  /** Dark glass styling for /players hub (matches competitions lobby). */
+  variant?: "default" | "hub";
 }
 
-export const HomePlayersExplorer = ({ teams }: HomePlayersExplorerProps) => {
+export const HomePlayersExplorer = ({ teams, variant = "default" }: HomePlayersExplorerProps) => {
   const [query, setQuery] = useState("");
   const [tier, setTier] = useState<TierFilter>("all");
+  const hub = variant === "hub";
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -59,16 +61,16 @@ export const HomePlayersExplorer = ({ teams }: HomePlayersExplorerProps) => {
     [filtered]
   );
 
-  const tierPills: { id: TierFilter; label: string }[] = [
-    { id: "all", label: "All tiers" },
-    { id: 1, label: "T1" },
-    { id: 3, label: "T3" },
-    { id: 5, label: "T5" },
-  ];
-
   if (teams.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
+      <p
+        className={cn(
+          "rounded-2xl border border-dashed px-6 py-12 text-center text-sm",
+          hub
+            ? "border-white/15 bg-white/[0.02] text-white/55"
+            : "bg-muted/30 text-muted-foreground"
+        )}
+      >
         Player pool is empty for now — check back after squads are loaded.
       </p>
     );
@@ -76,56 +78,35 @@ export const HomePlayersExplorer = ({ teams }: HomePlayersExplorerProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="relative max-w-md flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            type="search"
-            placeholder="Search player or franchise…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-11 rounded-full border-border/80 bg-background/80 pl-10 pr-4 shadow-sm"
-            aria-label="Search players"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            <Filter className="size-3.5" aria-hidden />
-            Tier
-          </span>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by tier">
-            {tierPills.map((p) => (
-              <button
-                key={String(p.id)}
-                type="button"
-                onClick={() => setTier(p.id)}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                  tier === p.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border/80 bg-muted/40 text-muted-foreground hover:bg-muted"
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PlayersExplorerToolbar
+        query={query}
+        onQueryChange={setQuery}
+        tier={tier}
+        onTierChange={setTier}
+        variant={variant}
+      />
 
-      <p className="text-xs text-muted-foreground">
+      <p className={cn("text-xs", hub ? "text-white/45" : "text-muted-foreground")}>
         Showing{" "}
-        <span className="font-semibold tabular-nums text-foreground">{totalShown}</span> player
-        {totalShown === 1 ? "" : "s"} across{" "}
-        <span className="font-semibold tabular-nums text-foreground">{filtered.length}</span>{" "}
+        <span className={cn("font-semibold tabular-nums", hub ? "text-white" : "text-foreground")}>
+          {totalShown}
+        </span>{" "}
+        player{totalShown === 1 ? "" : "s"} across{" "}
+        <span className={cn("font-semibold tabular-nums", hub ? "text-white" : "text-foreground")}>
+          {filtered.length}
+        </span>{" "}
         franchise{filtered.length === 1 ? "" : "s"}
       </p>
 
       {filtered.length === 0 ? (
-        <p className="rounded-2xl border border-dashed bg-muted/20 px-6 py-10 text-center text-sm text-muted-foreground">
+        <p
+          className={cn(
+            "rounded-2xl border border-dashed px-6 py-10 text-center text-sm",
+            hub
+              ? "border-white/15 bg-white/[0.02] text-white/55"
+              : "bg-muted/20 text-muted-foreground"
+          )}
+        >
           No players match your filters. Try a different search or tier.
         </p>
       ) : (
@@ -138,6 +119,7 @@ export const HomePlayersExplorer = ({ teams }: HomePlayersExplorerProps) => {
               logoUrl={team.logoUrl}
               players={team.players}
               accentClass={accentForFranchiseId(team.id)}
+              variant={variant}
             />
           ))}
         </div>
