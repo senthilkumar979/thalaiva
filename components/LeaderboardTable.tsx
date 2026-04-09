@@ -48,7 +48,12 @@ export const LeaderboardTable = ({
     );
 
   return (
-    <Table className={cn(competition && "text-white")}>
+    <Table
+      className={cn(
+        "w-full min-w-[18rem] sm:min-w-0",
+        competition && "text-white",
+      )}
+    >
       <TableHeader>
         <TableRow
           className={cn(

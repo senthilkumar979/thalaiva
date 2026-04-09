@@ -1,57 +1,19 @@
-"use client";
+'use client'
 
-import {
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { ArrowLeftRight, TrendingDown, Users, type LucideIcon } from "lucide-react";
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  className,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string | number;
-  sub?: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 shadow-inner shadow-black/20 backdrop-blur-sm sm:px-4 sm:py-3",
-        className
-      )}
-    >
-      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-white/45 sm:text-[11px] text-center justify-center">
-        <Icon className="size-3.5 shrink-0 text-amber-300/70" aria-hidden />
-        {label}
-      </div>
-      <p className="text-xl font-semibold tabular-nums tracking-tight text-white sm:text-2xl text-center justify-center">{value}</p>
-      {sub ? <p className="text-xs text-white/50 text-center justify-center">{sub}</p> : null}
-    </div>
-  );
-}
+import { SWAP_SCORE_BUDGET_TOTAL } from '@/lib/swapPenaltyRules'
 
 interface TeamPlayersDialogHeroProps {
-  displayName: string;
-  loading: boolean;
-  squadCount: number;
-  transferCount: number;
-  penaltyTotal: number;
+  displayName: string
+  totalFantasyPoints?: number
+  penaltyTotal?: number
+  rank?: number
 }
 
 export const TeamPlayersDialogHero = ({
   displayName,
-  loading,
-  squadCount,
-  transferCount,
+  totalFantasyPoints,
   penaltyTotal,
+  rank,
 }: TeamPlayersDialogHeroProps) => (
   <div className="relative shrink-0 overflow-hidden border-b border-white/10">
     <div
@@ -59,38 +21,57 @@ export const TeamPlayersDialogHero = ({
       aria-hidden
     />
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-transparent" />
-    <DialogHeader className="relative space-y-2 px-4 pb-2 pt-4 text-left sm:px-6 sm:pt-6">
+    <header className="relative space-y-2 px-4 pb-2 pt-4 text-left sm:px-6 sm:pt-6">
       <div className="flex items-center gap-2 sm:gap-3">
         <span className="h-1 w-8 shrink-0 rounded-full bg-gradient-to-r from-amber-300 to-amber-500/40 sm:w-10" />
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50 sm:text-[11px] sm:tracking-[0.28em]">
           Competition entry
         </p>
       </div>
-      <DialogTitle className="text-balance break-words text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl">
+      <h1 className="text-balance break-words text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl flex flex-col sm:flex-row items-center gap-2 justify-between">
         {displayName}
-      </DialogTitle>
-      <DialogDescription className="text-pretty text-xs leading-relaxed text-white/60 sm:text-sm">
-        Roster, roles, IPL sides, fantasy tiers, match points, and transfer history with score penalties.
-      </DialogDescription>
-    </DialogHeader>
-
-    {!loading ? (
-      <div className="relative grid grid-cols-3 gap-2 px-4 pb-4 sm:gap-3 sm:px-6 sm:pb-6">
-        <StatCard icon={Users} label="Squad size" value={squadCount || "—"} sub="players" />
-        <StatCard
-          icon={ArrowLeftRight}
-          label="Swaps"
-          value={transferCount}
-          sub="swaps"
-        />
-        <StatCard
-          icon={TrendingDown}
-          label="Penalties"
-          value={-penaltyTotal}
-          sub="deducted points"
-          className="[&>p.font-semibold]:text-amber-200/95"
-        />
-      </div>
-    ) : null}
+        <div className="flex flex-row sm:flex-row items-start sm:items-center gap-3 sm:gap-4 bg-white/5 px-3 py-2 rounded-lg">
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold text-amber-300 tracking-wide uppercase">
+              Fantasy Points Earned
+            </span>
+            <span className="text-lg font-bold text-white">
+              {(totalFantasyPoints ?? 0) - (1100 - (penaltyTotal ?? 0))}
+            </span>
+          </div>
+          <div className="hidden sm:block h-7 w-px bg-white/10 rounded" />
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold text-sky-300 tracking-wide uppercase">
+              Unused Swap Budget
+            </span>
+            <span className="text-lg font-bold text-white">
+              {1100 - (penaltyTotal ?? 0)}
+            </span>
+          </div>
+          <div className="hidden sm:block h-7 w-px bg-white/10 rounded" />
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold text-lime-300 tracking-wide uppercase">
+              Total Fantasy Points
+            </span>
+            <span className="text-lg font-bold text-white">
+              {totalFantasyPoints}
+            </span>
+          </div>
+          <div className="hidden sm:block h-7 w-px bg-white/10 rounded" />
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold text-lime-300 tracking-wide uppercase">
+              Rank
+            </span>
+            <span className="text-lg font-bold text-white">#{rank}</span>
+          </div>
+        </div>
+      </h1>
+      <p className="text-pretty text-xs leading-relaxed text-white/60 sm:text-sm">
+        Roster, roles, IPL sides, fantasy tiers, match points, and transfer
+        history with score penalties. Each entry starts with a{' '}
+        {SWAP_SCORE_BUDGET_TOTAL.toLocaleString()}-pt swap score budget (tier
+        slots + leadership); swaps reduce your fantasy total per league rules.
+      </p>
+    </header>
   </div>
-);
+)

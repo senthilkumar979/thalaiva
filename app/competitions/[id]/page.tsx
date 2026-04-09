@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Pencil } from 'lucide-react'
 import { CompetitionBreadcrumb } from '@/components/competitions/CompetitionBreadcrumb'
@@ -12,7 +12,6 @@ import { CompetitionDetailNotFound } from '@/components/competitions/Competition
 import { CompetitionAdminPanel } from '@/components/competitions/CompetitionAdminPanel'
 import { CompetitionLeaderboardSection } from '@/components/competitions/CompetitionLeaderboardSection'
 import { CompetitionMyTeamStrip } from '@/components/competitions/CompetitionMyTeamStrip'
-import { CompetitionTeamPlayersDialog } from '@/components/competitions/CompetitionTeamPlayersDialog'
 import type { LeaderboardRow } from '@/components/LeaderboardTable'
 import { Button } from '@/components/ui/button'
 import { areCompetitionEntriesClosed } from '@/lib/competitionEntryGate'
@@ -33,6 +32,7 @@ interface MyEntry {
 
 export default function CompetitionDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = String(params.id)
   const { data: session } = useSession()
   const [comp, setComp] = useState<Competition | null>(null)
@@ -42,10 +42,6 @@ export default function CompetitionDetailPage() {
   const [mine, setMine] = useState<MyEntry | null>(null)
   const [myRank, setMyRank] = useState<number | null>(null)
   const [adminOpen, setAdminOpen] = useState(false)
-  const [teamDialog, setTeamDialog] = useState<{
-    entryId: string
-    teamName: string
-  } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -122,18 +118,19 @@ export default function CompetitionDetailPage() {
   const revealAllSquads = comp.entriesFrozen === true || isAdmin
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 text-white shadow-2xl">
+    <div className="relative max-w-full min-w-0 overflow-hidden rounded-xl border border-white/10 text-white shadow-2xl sm:rounded-2xl">
       <div
         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0a1f4a] via-[#19398a] to-[#071229]"
         aria-hidden
       />
-      <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-sky-500/12 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-sky-500/12 blur-3xl max-sm:-left-24 max-sm:h-64 max-sm:w-64" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl max-sm:-right-16 max-sm:h-56 max-sm:w-56" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-[min(100%,28rem)] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-      <div className="relative space-y-8 px-4 py-10 sm:px-8 sm:py-12">
+      <div className="relative space-y-6 px-3 pb-8 pt-6 sm:space-y-8 sm:px-6 sm:py-10 md:px-8 md:py-12">
         <CompetitionBreadcrumb
           variant="dark"
+          className="text-xs sm:text-sm"
           items={[
             { label: 'Home', href: '/' },
             { label: 'Competitions', href: '/competitions' },
@@ -141,7 +138,7 @@ export default function CompetitionDetailPage() {
           ]}
         />
 
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <CompetitionDetailHero
               competition={{
@@ -160,7 +157,7 @@ export default function CompetitionDetailPage() {
               type="button"
               variant="outline"
               size="icon"
-              className="mt-1 shrink-0 border-white/25 bg-white/5 text-white hover:bg-white/10"
+              className="shrink-0 self-end border-white/25 bg-white/5 text-white hover:bg-white/10 sm:mt-1 sm:self-start"
               onClick={() => setAdminOpen((o) => !o)}
               aria-expanded={adminOpen}
               aria-label={
@@ -196,22 +193,25 @@ export default function CompetitionDetailPage() {
           />
         )}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
           {entriesClosed ? (
             <Button
               type="button"
               disabled
-              className="h-11 cursor-not-allowed rounded-xl border border-white/15 bg-white/10 px-6 font-semibold text-white/50"
+              className="h-11 w-full cursor-not-allowed rounded-xl border border-white/15 bg-white/10 px-6 font-semibold text-white/50 sm:w-auto"
             >
               Entries closed
             </Button>
           ) : mine ? (
             <></>
           ) : (
-            <Link href={`/competitions/${id}/enter`} className="inline-flex">
+            <Link
+              href={`/competitions/${id}/enter`}
+              className="inline-flex w-full sm:w-auto"
+            >
               <Button
                 type="button"
-                className="h-11 rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90"
+                className="h-11 w-full rounded-xl bg-white px-6 font-semibold text-[#19398a] shadow-lg hover:bg-white/90 sm:w-auto"
               >
                 Enter team
               </Button>
@@ -226,29 +226,38 @@ export default function CompetitionDetailPage() {
               {revealAllSquads ? "Submitted players" : "My squad"}
             </Button>
           </Link> */}
-          <Link href={`/competitions/${id}/matches`} className="inline-flex">
+          <Link
+            href={`/competitions/${id}/matches`}
+            className="inline-flex w-full sm:w-auto"
+          >
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+              className="h-11 w-full rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
             >
               All matches
             </Button>
           </Link>
-          <Link href={`/competitions/${id}/players/leaderboard`} className="inline-flex">
+          <Link
+            href={`/competitions/${id}/players/leaderboard`}
+            className="inline-flex w-full sm:w-auto"
+          >
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+              className="h-11 w-full rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
             >
               Player points
             </Button>
           </Link>
-          <Link href={`/competitions/${id}/scores`} className="inline-flex">
+          <Link
+            href={`/competitions/${id}/scores`}
+            className="inline-flex w-full sm:w-auto"
+          >
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10"
+              className="h-11 w-full rounded-xl border-white/25 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
             >
               Scores by match
             </Button>
@@ -258,27 +267,20 @@ export default function CompetitionDetailPage() {
         <CompetitionLeaderboardSection
           rows={board}
           highlightEmail={session?.user?.email ?? null}
-          onTeamClick={(row) =>
-            setTeamDialog({
-              entryId: row.entryId,
-              teamName: row.customTeamName,
-            })
-          }
+          onTeamClick={(row) => {
+            const q = new URLSearchParams()
+            q.set('fantasy', String(row.totalScore))
+            q.set('name', row.customTeamName)
+            q.set('rank', String(row.rank))
+            router.push(
+              `/competitions/${id}/entries/${encodeURIComponent(row.entryId)}?${q.toString()}`,
+            )
+          }}
           privacyNote={
             revealAllSquads
               ? null
               : 'Only your team is shown here until entries are frozen. Admins always see every team.'
           }
-        />
-
-        <CompetitionTeamPlayersDialog
-          open={teamDialog !== null}
-          onOpenChange={(open) => {
-            if (!open) setTeamDialog(null)
-          }}
-          competitionId={id}
-          entryId={teamDialog?.entryId ?? null}
-          teamName={teamDialog?.teamName ?? null}
         />
       </div>
     </div>

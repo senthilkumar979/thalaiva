@@ -22,7 +22,7 @@ export const CompetitionLeaderboardSection = ({
       className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_0%_-20%,rgba(251,191,36,0.08),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(56,189,248,0.06),transparent)]"
       aria-hidden
     />
-    <div className="relative space-y-6 px-6 py-8 sm:px-8">
+    <div className="relative space-y-5 px-4 py-6 sm:space-y-6 sm:px-8 sm:py-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
           <div className="flex shrink-0 flex-col items-center gap-2">
@@ -47,7 +47,7 @@ export const CompetitionLeaderboardSection = ({
       </div>
 
       <div className="overflow-hidden rounded-xl border border-white/10 bg-black/25 p-1 backdrop-blur-sm">
-        <div className="rounded-lg px-2 py-2 sm:px-4 sm:py-4">
+        <div className="-mx-1 overflow-x-auto overscroll-x-contain rounded-lg px-1 py-2 touch-pan-x sm:mx-0 sm:px-4 sm:py-4">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/[0.02] p-12 text-center">
               <p className="text-sm font-medium text-white/70">No entries yet</p>
@@ -65,7 +65,9 @@ export const CompetitionLeaderboardSection = ({
       </div>
 
       {onTeamClick ? (
-        <p className="text-center text-[11px] text-white/40">Tap a team row to view squad players (when enabled).</p>
+        <p className="text-center text-[11px] text-white/40">
+          Tap a team row to open the squad page (when enabled).
+        </p>
       ) : null}
     </div>
   </section>

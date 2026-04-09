@@ -4,7 +4,12 @@ import { connectDb } from "@/lib/db";
 import { areCompetitionEntriesClosed } from "@/lib/competitionEntryGate";
 import { ensureEntrySwapMigration } from "@/lib/ensureEntrySwapMigration";
 import { requireUser } from "@/lib/session";
-import { MAX_PLAYER_SWAPS_TOTAL, totalPlayerSwapsFromEntry } from "@/lib/swapPenaltyRules";
+import { getSwapPenaltyDeductedForEntries } from "@/lib/entrySwapPenaltyTotals";
+import {
+  entryTotalFantasyWithSwapBudget,
+  MAX_PLAYER_SWAPS_TOTAL,
+  totalPlayerSwapsFromEntry,
+} from "@/lib/swapPenaltyRules";
 import { countScoredMatches } from "@/lib/swapEffectiveMatch";
 import { Competition } from "@/models/Competition";
 import { Entry } from "@/models/Entry";
@@ -58,6 +63,12 @@ export async function GET(_req: Request, { params }: RouteParams) {
         (swapsRemaining > 0 || leadershipChangeAvailable)
     );
 
+    let penaltyD = 0;
+    if (entry) {
+      const pm = await getSwapPenaltyDeductedForEntries([entry._id]);
+      penaltyD = pm.get(String(entry._id)) ?? 0;
+    }
+
     let reason: string | undefined;
     if (!entry) reason = "No team submitted";
     else if (!entriesClosed) reason = "Opens after the entry deadline";
@@ -75,7 +86,9 @@ export async function GET(_req: Request, { params }: RouteParams) {
       swapsUsedTierSlot2: t2,
       swapsUsedTierSlot3: t3,
       tierRemaining,
-      totalScore: entry?.totalScore ?? 0,
+      totalScore: entry
+        ? entryTotalFantasyWithSwapBudget(entry.totalScore ?? 0, penaltyD)
+        : 0,
       scoredMatches,
       blockSequence,
       nextMatchNumber,

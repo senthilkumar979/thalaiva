@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { getSwapPenaltyDeductedForEntries } from "@/lib/entrySwapPenaltyTotals";
 import { requireUser } from "@/lib/session";
+import { entryTotalFantasyWithSwapBudget } from "@/lib/swapPenaltyRules";
 import { Entry } from "@/models/Entry";
 import { Franchise } from "../../../../../../models/Franchise";
 
@@ -42,7 +44,12 @@ export async function GET(_req: Request, { params }: RouteParams) {
     }
 
     if (!entry) return NextResponse.json(null);
-    return NextResponse.json(entryWithFranchises);
+    const penaltyMap = await getSwapPenaltyDeductedForEntries([entry._id]);
+    const d = penaltyMap.get(String(entry._id)) ?? 0;
+    return NextResponse.json({
+      ...entryWithFranchises,
+      totalScore: entryTotalFantasyWithSwapBudget(entry.totalScore ?? 0, d),
+    });
   } catch (e) {
     const err = e as Error & { status?: number };
     if (err.status) return NextResponse.json({ error: err.message }, { status: err.status });

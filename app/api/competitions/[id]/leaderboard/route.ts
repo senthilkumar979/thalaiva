@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/db";
+import { getSwapPenaltyDeductedForEntries } from "@/lib/entrySwapPenaltyTotals";
 import { getAuthSession } from "@/lib/session";
 import { shouldRevealAllTeams } from "@/lib/competitionTeamVisibility";
+import { entryTotalFantasyWithSwapBudget } from "@/lib/swapPenaltyRules";
 import { Competition } from "@/models/Competition";
 import { Entry } from "@/models/Entry";
 
@@ -27,17 +29,24 @@ export async function GET(_req: Request, { params }: RouteParams) {
     ]);
     if (!comp) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const rows = await Entry.find({ competition: id })
-      .sort({ totalScore: -1 })
-      .populate("user", "name email")
-      .lean();
+    const rows = await Entry.find({ competition: id }).populate("user", "name email").lean();
+    const penaltyMap = await getSwapPenaltyDeductedForEntries(rows.map((r) => r._id));
+
+    const withDisplay = rows.map((r) => {
+      const d = penaltyMap.get(String(r._id)) ?? 0;
+      const displayTotal = entryTotalFantasyWithSwapBudget(r.totalScore ?? 0, d);
+      return { row: r, displayTotal };
+    });
+    withDisplay.sort((a, b) => b.displayTotal - a.displayTotal);
+
     let rank = 1;
-    const ranked = rows.map((r, i) => {
-      if (i > 0 && r.totalScore < rows[i - 1].totalScore) rank = i + 1;
+    const ranked = withDisplay.map((item, i) => {
+      if (i > 0 && item.displayTotal < withDisplay[i - 1].displayTotal) rank = i + 1;
+      const r = item.row;
       return {
         entryId: String(r._id),
         rank,
-        totalScore: r.totalScore,
+        totalScore: item.displayTotal,
         customTeamName: r.customTeamName,
         user: r.user,
       };
