@@ -91,13 +91,19 @@ export default function AdminCompetitionsPage() {
                   {!c.isActive ? " · Inactive" : ""}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-wrap gap-4">
                 <Link
                   href={`/competitions/${c._id}`}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-200 underline-offset-4 hover:text-white hover:underline"
                 >
                   Open competition
                   <ExternalLink className="size-3.5 opacity-70" aria-hidden />
+                </Link>
+                <Link
+                  href={`/admin/competitions/${c._id}/swap-window`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-200/90 underline-offset-4 hover:text-white hover:underline"
+                >
+                  Swap window
                 </Link>
               </CardContent>
             </Card>

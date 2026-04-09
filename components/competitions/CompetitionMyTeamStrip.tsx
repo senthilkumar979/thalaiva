@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Crown, TrendingUp } from "lucide-react";
+import { BarChart3, Crown, Shuffle, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CompetitionMyTeamStripProps {
@@ -11,6 +11,8 @@ interface CompetitionMyTeamStripProps {
   rank: number | null;
   /** When true, show shortcut to edit squad while entries are open. */
   entriesOpen?: boolean;
+  /** After entries close — link to player swap flow (optional). */
+  swapsHref?: string;
 }
 
 export const CompetitionMyTeamStrip = ({
@@ -19,6 +21,7 @@ export const CompetitionMyTeamStrip = ({
   totalScore,
   rank,
   entriesOpen = false,
+  swapsHref,
 }: CompetitionMyTeamStripProps) => (
   <section className="relative overflow-hidden rounded-2xl border border-amber-400/25 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent p-[1px] shadow-lg">
     <div className="rounded-[15px] bg-[#0a2469]/40 px-5 py-5 backdrop-blur-md sm:px-6 sm:py-6">
@@ -69,6 +72,19 @@ export const CompetitionMyTeamStrip = ({
                 Match breakdown
               </Button>
             </Link>
+            {swapsHref ? (
+              <Link href={swapsHref} className="inline-flex">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="gap-2 border-amber-400/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/15"
+                >
+                  <Shuffle className="size-4" />
+                  Player swaps
+                </Button>
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

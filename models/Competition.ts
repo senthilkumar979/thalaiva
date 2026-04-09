@@ -9,6 +9,9 @@ export interface ICompetition {
   entriesFrozen: boolean;
   isActive: boolean;
   participants: Types.ObjectId[];
+  /** Admin-only: player swap window open for this league. */
+  swapWindowOpen?: boolean;
+  activeSwapWindow?: Types.ObjectId;
 }
 
 export interface ICompetitionDocument extends ICompetition {
@@ -24,6 +27,8 @@ const CompetitionSchema = new Schema<ICompetition>(
     entriesFrozen: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     participants: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    swapWindowOpen: { type: Boolean, default: false },
+    activeSwapWindow: { type: Schema.Types.ObjectId, ref: "SwapWindow", required: false },
   },
   { timestamps: true }
 );
