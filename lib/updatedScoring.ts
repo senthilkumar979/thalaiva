@@ -121,17 +121,17 @@ const POINTS = {
   STRIKE_RATE_MIN_BALLS: 10,
 
   // Bowling
-  PER_OVER: 1,
-  PER_WICKET: 15,
+  PER_OVER: 2,
+  PER_WICKET: 25,
   PER_DOT_BALL: 1,
-  PER_MAIDEN: 5,
-  ECONOMY_BONUS: 5,           // economy < 6, min 2 overs
-  ECONOMY_THRESHOLD: 6,
-  ECONOMY_MIN_OVERS: 2,
-  HATTRICK_BONUS: 30,
-  HAUL_3W: 10,
-  HAUL_5W: 25,
-  HAUL_6W: 50,
+  PER_MAIDEN: 20,
+  ECONOMY_BONUS: 10,           // economy < 8, min 1 over
+  ECONOMY_THRESHOLD: 8,
+  ECONOMY_MIN_OVERS: 1,
+  HATTRICK_BONUS: 75,
+  HAUL_3W: 25,
+  HAUL_5W: 50,
+  HAUL_6W: 100,
 
   // Fielding
   PER_CATCH: 10,

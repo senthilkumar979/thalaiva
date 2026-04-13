@@ -197,7 +197,7 @@ const BOWLING_BREAKDOWN_LABELS = new Set([
   "3-wicket haul",
   "5-wicket haul",
   "6-wicket haul",
-  "Economy bonus (<6)",
+  "Economy bonus (<8)",
 ]);
 
 const FIELDING_BREAKDOWN_LABELS = new Set(["Catches", "Stumpings", "Run-outs"]);
