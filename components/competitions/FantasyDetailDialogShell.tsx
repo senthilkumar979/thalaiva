@@ -1,19 +1,24 @@
-import type { ReactNode } from "react";
-import { DialogContent } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { COMPETITION_BRAND_BG, COMPETITION_ORB_DEEP } from "@/components/competitions/competitionTheme";
+import type { ReactNode } from 'react'
+import { DialogContent } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
+import {
+  COMPETITION_BRAND_BG,
+  COMPETITION_ORB_DEEP,
+} from '@/components/competitions/competitionTheme'
 
 interface FantasyDetailDialogShellProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
-export const FantasyDetailDialogShell = ({ children }: FantasyDetailDialogShellProps) => (
+export const FantasyDetailDialogShell = ({
+  children,
+}: FantasyDetailDialogShellProps) => (
   <DialogContent
     showCloseButton
     className={cn(
-      "fixed top-10 right-10 left-auto flex h-full max-h-[94dvh] max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none rounded-2xl border-0 p-0 sm:max-w-md",
-      "!border-0 !bg-transparent !p-0 !text-white shadow-2xl shadow-black/50 ring-1 ring-white/15",
-      "[&_[data-slot=dialog-close]]:z-20 [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white"
+      'fixed top-10 right-0 right-lg-10 left-auto flex h-full max-h-[94dvh] max-w-md translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none rounded-2xl border-0 p-0 sm:max-w-md',
+      '!border-0 !bg-transparent !p-0 !text-white shadow-2xl shadow-black/50 ring-1 ring-white/15',
+      '[&_[data-slot=dialog-close]]:z-20 [&_[data-slot=dialog-close]]:text-white/70 [&_[data-slot=dialog-close]]:hover:bg-white/10 [&_[data-slot=dialog-close]]:hover:text-white',
     )}
   >
     <div
@@ -31,4 +36,4 @@ export const FantasyDetailDialogShell = ({ children }: FantasyDetailDialogShellP
     </div>
     {children}
   </DialogContent>
-);
+)

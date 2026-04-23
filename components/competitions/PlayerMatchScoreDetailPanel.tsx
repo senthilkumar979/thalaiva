@@ -17,6 +17,33 @@ import {
   RawDl,
 } from '@/components/competitions/playerMatchFantasyDetailBlocks'
 
+const FANTASY_SECTIONS = [
+  {
+    key: 'batting' as const,
+    title: 'Batting',
+    emptyHint: 'No batting points in this match.',
+    accent: 'amber' as const,
+  },
+  {
+    key: 'bowling' as const,
+    title: 'Bowling',
+    emptyHint: 'No bowling points in this match.',
+    accent: 'sky' as const,
+  },
+  {
+    key: 'fielding' as const,
+    title: 'Fielding',
+    emptyHint: 'No fielding points in this match.',
+    accent: 'emerald' as const,
+  },
+  {
+    key: 'participation' as const,
+    title: 'Bonuses & awards',
+    emptyHint: 'No bonuses or awards in this match.',
+    accent: 'violet' as const,
+  },
+]
+
 export interface PlayerMatchScoreDetailPanelProps {
   playerName: string
   matchTitle: string
@@ -51,6 +78,10 @@ export const PlayerMatchScoreDetailPanel = ({
     isPlayerOfMatch,
   )
   const grouped = groupBreakdownBySection(breakdown)
+  const rawTotal = [...grouped.batting, ...grouped.bowling, ...grouped.fielding].reduce(
+    (sum, row) => sum + row.points,
+    0,
+  )
 
   return (
     <>
@@ -114,8 +145,9 @@ export const PlayerMatchScoreDetailPanel = ({
           <RawDl
             items={[
               { label: 'Wickets', value: Bowling.wickets },
-              { label: 'Overs', value: Bowling.oversBowled },
+              { label: 'Overs Bowled', value: Bowling.oversBowled },
               { label: 'Runs conc.', value: Bowling.runsConceded },
+              { label: 'Economy Bonus', value: Bowling.economyBonus },
               {
                 label: 'Maidens / Dots',
                 value: (
@@ -138,36 +170,36 @@ export const PlayerMatchScoreDetailPanel = ({
           />
         </RawBlock>
 
-        <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-          Fantasy points
+        <p className="text-xs leading-relaxed text-white/55">
+          Match participation and player-of-the-match are shown under{' '}
+          <span className="text-white/70">Bonuses &amp; awards</span>. Team multipliers (captain,
+          vice-captain, playoffs) are applied on entry scoring, not this match sheet.
         </p>
 
-        <FantasySectionCard
-          title="Batting"
-          rows={grouped.batting}
-          accent="amber"
-        />
-        <FantasySectionCard
-          title="Bowling"
-          rows={grouped.bowling}
-          accent="sky"
-        />
-        <FantasySectionCard
-          title="Fielding"
-          rows={grouped.fielding}
-          accent="emerald"
-        />
+        <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+          Fantasy points by section
+        </p>
 
-        {grouped.participation.length > 0 ? (
-          <FantasySectionCard
-            title="Match bonuses"
-            rows={grouped.participation}
-            accent="violet"
-          />
-        ) : null}
+        {FANTASY_SECTIONS.map(({ key, title, accent, emptyHint }) => {
+          if (key === 'participation' && grouped.participation.length === 0) return null
+          return (
+            <FantasySectionCard
+              key={key}
+              title={title}
+              rows={grouped[key]}
+              accent={accent}
+              emptyLabel={emptyHint}
+            />
+          )
+        })}
+
+        <div className="flex justify-between gap-4 border-t border-white/10 pt-4 tabular-nums text-white/55">
+          <span>Raw total</span>
+          <span className="font-medium text-white">{rawTotal}</span>
+        </div>
 
         <div className="flex items-center justify-between rounded-xl border border-emerald-400/25 bg-emerald-500/15 px-4 py-3 font-semibold tabular-nums text-emerald-100 shadow-inner shadow-black/20">
-          <span>Total fantasy</span>
+          <span>Final score</span>
           <span className="text-lg">{total}</span>
         </div>
       </div>

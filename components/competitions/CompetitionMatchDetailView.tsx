@@ -125,7 +125,6 @@ export const CompetitionMatchDetailView = ({ competitionId, matchId }: Competiti
       </CompetitionSubpageShell>
     );
   }
-
   const { match, franchiseA, franchiseB, scored, players } = data;
 
   return (

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export function FantasyLineRows({ rows }: { rows: { label: string; points: number }[] }) {
   return (
-    <ul className="mt-3 space-y-1.5 text-sm">
+    <ul className="mt-3 space-y-2 text-sm">
       {rows.map((r) => (
         <li key={r.label} className="flex justify-between gap-4 tabular-nums">
           <span className="text-white/85">{r.label}</span>
@@ -28,16 +28,18 @@ export function FantasySectionCard({
   title,
   rows,
   accent,
+  emptyLabel = 'No fantasy points in this section.',
 }: {
   title: string;
   rows: { label: string; points: number }[];
   accent: keyof typeof fantasyAccent;
+  emptyLabel?: string;
 }) {
   return (
     <section className={cn("rounded-xl border p-4 ring-1", fantasyAccent[accent])}>
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">{title}</h3>
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/60">{title}</h3>
       {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-white/45">No fantasy points in this section.</p>
+        <p className="mt-3 text-sm text-white/45">{emptyLabel}</p>
       ) : (
         <FantasyLineRows rows={rows} />
       )}

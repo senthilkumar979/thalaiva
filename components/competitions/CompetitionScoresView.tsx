@@ -56,6 +56,7 @@ export const CompetitionScoresView = ({ competitionId }: CompetitionScoresViewPr
 
   const compName = data?.competition.name ?? "League";
   const drawerPlayer = drawer?.row;
+  console.log("data", drawerPlayer);
 
   const xiMatchBlocks = useMemo(() => {
     if (!data?.matches.length) return [];

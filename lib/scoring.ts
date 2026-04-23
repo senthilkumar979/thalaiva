@@ -172,7 +172,10 @@ export function sectionFantasyPoints(stats: IPlayerMatchScoreInput): {
   const oversDec = cricketOversToDecimal(bw.oversBowled);
   if (oversDec >= 2 && oversDec > 0) {
     const economy = bw.runsConceded / oversDec;
-    if (economy <= P.ECONOMY_THRESHOLD) bowling += P.ECONOMY_BONUS;
+    if (economy <= P.ECONOMY_THRESHOLD) {
+      bw.economyBonus = P.ECONOMY_BONUS;
+      bowling += P.ECONOMY_BONUS;
+    }
   }
   const fielding = f.catches * P.PER_CATCH + f.stumpings * P.PER_STUMPING + f.runOuts * P.PER_DIRECT_RUNOUT;
   return { batting, bowling, fielding };
@@ -197,6 +200,7 @@ const BOWLING_BREAKDOWN_LABELS = new Set([
   "3-wicket haul",
   "5-wicket haul",
   "6-wicket haul",
+  "Economy bonus (<6)",
   "Economy bonus (<8)",
 ]);
 

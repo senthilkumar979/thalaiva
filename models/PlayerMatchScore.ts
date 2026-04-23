@@ -14,6 +14,7 @@ export interface IBowlingStats {
   maidenOvers: number;
   runsConceded: number;
   dotBalls: number;
+  economyBonus: number;
   /** Admin-flagged hat-trick (see scoring rules). */
   hasHattrick: boolean;
 }

@@ -78,6 +78,8 @@ export const MyTeamPlayerMatchDrawer = ({
       ? `Match #${data.match.matchNumber}`
       : "Match";
 
+  console.log(data);
+
   const panelProps =
     data?.Batting && data.Bowling && data.Fielding
       ? {
